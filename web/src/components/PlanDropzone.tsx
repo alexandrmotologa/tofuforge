@@ -39,12 +39,19 @@ export const PlanDropzone: React.FC<PlanDropzoneProps> = ({ onPlanLoaded, onClos
 
     try {
       const raw = JSON.parse(content);
-      // Basic validation
+      // If the file is already an analyzed plan JSON (e.g. from tofuforge inspect --json)
+      if (raw.nodes && raw.stats) {
+        onPlanLoaded(raw as AnalyzedPlan);
+        onClose();
+        return;
+      }
+
+      // Basic validation for raw Terraform/OpenTofu plan JSON
       if (!raw.resource_changes && !raw.format_version && !raw.planned_values) {
         throw new Error('JSON is missing Terraform/OpenTofu plan properties (resource_changes or planned_values)');
       }
 
-      setError('Backend API /api/upload not available to process this raw plan. Please launch with "tofuforge serve" or select a pre-loaded sample.');
+      setError('Backend API /api/upload not reachable to analyze raw plan. Please run with "tofuforge serve" or select a pre-loaded sample.');
     } catch (err: any) {
       setError(err.message || 'Failed to parse JSON file');
     } finally {
