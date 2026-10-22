@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e1b4b" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="forgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fef08a"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="400" height="400" rx="80" fill="url(#bgGlow)"/>
+  <rect width="396" height="396" x="2" y="2" rx="78" fill="none" stroke="#334155" stroke-width="2" stroke-opacity="0.4"/>
+
+  <!-- Subtle Blueprint Grid -->
+  <path d="M 60,0 L 60,400 M 120,0 L 120,400 M 180,0 L 180,400 M 240,0 L 240,400 M 300,0 L 300,400 M 360,0 L 360,400
+           M 0,60 L 400,60 M 0,120 L 400,120 M 0,180 L 400,180 M 0,240 L 400,240 M 0,300 L 400,300 M 0,360 L 400,360"
+        stroke="#1e293b" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- DAG Graph Connecting Lines -->
+  <g stroke="#64748b" stroke-width="3" stroke-dasharray="4,4" opacity="0.6">
+    <line x1="120" y1="130" x2="200" y2="190"/>
+    <line x1="280" y1="130" x2="200" y2="190"/>
+    <line x1="200" y1="190" x2="140" y2="280"/>
+    <line x1="200" y1="190" x2="260" y2="280"/>
+  </g>
+
+  <!-- Graph Nodes -->
+  <circle cx="120" cy="130" r="14" fill="#0f172a" stroke="#10b981" stroke-width="4"/>
+  <circle cx="280" cy="130" r="14" fill="#0f172a" stroke="#0ea5e9" stroke-width="4"/>
+  <circle cx="140" cy="280" r="14" fill="#0f172a" stroke="#8b5cf6" stroke-width="4"/>
+  <circle cx="260" cy="280" r="14" fill="#0f172a" stroke="#f43f5e" stroke-width="4"/>
+
+  <!-- Anvil Base / Forge Body -->
+  <path d="M 120 230 L 280 230 L 260 255 L 240 255 L 250 290 L 150 290 L 160 255 L 140 255 Z"
+        fill="#0f172a" stroke="url(#forgeGradient)" stroke-width="6" stroke-linejoin="round"/>
+
+  <!-- Central Dynamic Flame / Anvil Horn -->
+  <path d="M 200 130 C 180 160 170 185 180 210 C 190 225 210 225 220 210 C 230 185 220 160 200 130 Z"
+        fill="url(#flameGrad)" filter="url(#glow)"/>
+  <path d="M 200 155 C 190 175 185 190 190 205 C 195 215 205 215 210 205 C 215 190 210 175 200 155 Z"
+        fill="#fef08a"/>
+
+  <!-- Spark Accents -->
+  <circle cx="170" cy="140" r="3" fill="#f59e0b" filter="url(#glow)"/>
+  <circle cx="235" cy="150" r="2.5" fill="#f43f5e" filter="url(#glow)"/>
+  <circle cx="195" cy="110" r="3" fill="#fde047" filter="url(#glow)"/>
+</svg>

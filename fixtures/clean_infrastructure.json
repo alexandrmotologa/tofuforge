@@ -1,0 +1,90 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.0",
+  "resource_changes": [
+    {
+      "address": "aws_vpc.vpc_main",
+      "mode": "managed",
+      "type": "aws_vpc",
+      "name": "vpc_main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "cidr_block": "172.16.0.0/16",
+          "enable_dns_support": true,
+          "enable_dns_hostnames": true
+        }
+      }
+    },
+    {
+      "address": "aws_subnet.private_zone_a",
+      "mode": "managed",
+      "type": "aws_subnet",
+      "name": "private_zone_a",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "cidr_block": "172.16.1.0/24",
+          "availability_zone": "us-east-1a"
+        }
+      }
+    },
+    {
+      "address": "aws_security_group.app_internal",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "app_internal",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "name": "app-internal-sg",
+          "description": "Restricted private security group"
+        }
+      }
+    },
+    {
+      "address": "aws_security_group_rule.allow_internal_https",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "allow_internal_https",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "type": "ingress",
+          "from_port": 443,
+          "to_port": 443,
+          "protocol": "tcp",
+          "cidr_blocks": ["172.16.0.0/16"]
+        }
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_subnet.private_zone_a",
+          "type": "aws_subnet",
+          "name": "private_zone_a",
+          "depends_on": ["aws_vpc.vpc_main"]
+        },
+        {
+          "address": "aws_security_group.app_internal",
+          "type": "aws_security_group",
+          "name": "app_internal",
+          "depends_on": ["aws_vpc.vpc_main"]
+        },
+        {
+          "address": "aws_security_group_rule.allow_internal_https",
+          "type": "aws_security_group_rule",
+          "name": "allow_internal_https",
+          "depends_on": ["aws_security_group.app_internal"]
+        }
+      ]
+    }
+  }
+}

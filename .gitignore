@@ -1,0 +1,31 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/tofuforge
+
+# Node & Frontend
+node_modules/
+dist/
+web/dist/
+web/node_modules/
+.vite/
+.tmp/
+temp_frames/
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & local credentials
+.env
+.env.local
+*.log

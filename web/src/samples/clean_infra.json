@@ -1,0 +1,251 @@
+{
+  "terraform_version": "1.9.0",
+  "format_version": "1.2",
+  "stats": {
+    "total_resources": 4,
+    "create_count": 4,
+    "update_count": 0,
+    "delete_count": 0,
+    "replace_count": 0,
+    "no_op_count": 0,
+    "read_count": 0,
+    "total_blast_radius": 0,
+    "critical_alerts_count": 0,
+    "security_issues_count": 0
+  },
+  "nodes": [
+    {
+      "id": "aws_security_group.app_internal",
+      "address": "aws_security_group.app_internal",
+      "name": "app_internal",
+      "type": "aws_security_group",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 1,
+      "downstream_ids": [
+        "aws_security_group_rule.allow_internal_https"
+      ],
+      "upstream_ids": [
+        "aws_vpc.vpc_main"
+      ],
+      "dependencies": [
+        "aws_vpc.vpc_main"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "description",
+          "after": "Restricted private security group",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "name",
+          "after": "app-internal-sg",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "description": "Restricted private security group",
+        "name": "app-internal-sg"
+      }
+    },
+    {
+      "id": "aws_security_group_rule.allow_internal_https",
+      "address": "aws_security_group_rule.allow_internal_https",
+      "name": "allow_internal_https",
+      "type": "aws_security_group_rule",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_security_group.app_internal"
+      ],
+      "dependencies": [
+        "aws_security_group.app_internal"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "cidr_blocks",
+          "after": [
+            "172.16.0.0/16"
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "from_port",
+          "after": 443,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "protocol",
+          "after": "tcp",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "to_port",
+          "after": 443,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "type",
+          "after": "ingress",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "cidr_blocks": [
+          "172.16.0.0/16"
+        ],
+        "from_port": 443,
+        "protocol": "tcp",
+        "to_port": 443,
+        "type": "ingress"
+      }
+    },
+    {
+      "id": "aws_subnet.private_zone_a",
+      "address": "aws_subnet.private_zone_a",
+      "name": "private_zone_a",
+      "type": "aws_subnet",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_vpc.vpc_main"
+      ],
+      "dependencies": [
+        "aws_vpc.vpc_main"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "availability_zone",
+          "after": "us-east-1a",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "cidr_block",
+          "after": "172.16.1.0/24",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "availability_zone": "us-east-1a",
+        "cidr_block": "172.16.1.0/24"
+      }
+    },
+    {
+      "id": "aws_vpc.vpc_main",
+      "address": "aws_vpc.vpc_main",
+      "name": "vpc_main",
+      "type": "aws_vpc",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 3,
+      "downstream_ids": [
+        "aws_security_group.app_internal",
+        "aws_security_group_rule.allow_internal_https",
+        "aws_subnet.private_zone_a"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "cidr_block",
+          "after": "172.16.0.0/16",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "enable_dns_hostnames",
+          "after": true,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "enable_dns_support",
+          "after": true,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "cidr_block": "172.16.0.0/16",
+        "enable_dns_hostnames": true,
+        "enable_dns_support": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "aws_vpc.vpc_main-\u003eaws_subnet.private_zone_a",
+      "source": "aws_vpc.vpc_main",
+      "target": "aws_subnet.private_zone_a",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_vpc.vpc_main-\u003eaws_security_group.app_internal",
+      "source": "aws_vpc.vpc_main",
+      "target": "aws_security_group.app_internal",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_security_group.app_internal-\u003eaws_security_group_rule.allow_internal_https",
+      "source": "aws_security_group.app_internal",
+      "target": "aws_security_group_rule.allow_internal_https",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    }
+  ],
+  "destruction_alerts": [],
+  "security_findings": [],
+  "topological_order": [
+    "aws_vpc.vpc_main",
+    "aws_security_group.app_internal",
+    "aws_security_group_rule.allow_internal_https",
+    "aws_subnet.private_zone_a"
+  ]
+}

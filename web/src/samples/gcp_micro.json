@@ -1,0 +1,340 @@
+{
+  "terraform_version": "1.8.4",
+  "format_version": "1.2",
+  "stats": {
+    "total_resources": 4,
+    "create_count": 4,
+    "update_count": 0,
+    "delete_count": 0,
+    "replace_count": 0,
+    "no_op_count": 0,
+    "read_count": 0,
+    "total_blast_radius": 0,
+    "critical_alerts_count": 0,
+    "security_issues_count": 2
+  },
+  "nodes": [
+    {
+      "id": "google_compute_firewall.allow_rdp_all",
+      "address": "google_compute_firewall.allow_rdp_all",
+      "name": "allow_rdp_all",
+      "type": "google_compute_firewall",
+      "provider": "google",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "google_compute_network.custom_vpc"
+      ],
+      "dependencies": [
+        "google_compute_network.custom_vpc"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "allow",
+          "after": [
+            {
+              "ports": [
+                "3389"
+              ],
+              "protocol": "tcp"
+            }
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "direction",
+          "after": "INGRESS",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "name",
+          "after": "allow-rdp-inbound",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "source_ranges",
+          "after": [
+            "0.0.0.0/0"
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "security_findings": [
+        {
+          "rule_id": "GCP-SEC-001",
+          "title": "GCP Firewall Exposes Public RDP (Port 3389)",
+          "severity": "CRITICAL",
+          "resource": "google_compute_firewall.allow_rdp_all",
+          "type": "google_compute_firewall",
+          "description": "Firewall rule permits 0.0.0.0/0 ingress to port 3389 (RDP).",
+          "remediation": "Scope source ranges to designated bastion or internal subnets.",
+          "attribute": "allow.ports"
+        }
+      ],
+      "raw_after": {
+        "allow": [
+          {
+            "ports": [
+              "3389"
+            ],
+            "protocol": "tcp"
+          }
+        ],
+        "direction": "INGRESS",
+        "name": "allow-rdp-inbound",
+        "source_ranges": [
+          "0.0.0.0/0"
+        ]
+      }
+    },
+    {
+      "id": "google_compute_network.custom_vpc",
+      "address": "google_compute_network.custom_vpc",
+      "name": "custom_vpc",
+      "type": "google_compute_network",
+      "provider": "google",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 3,
+      "downstream_ids": [
+        "google_compute_firewall.allow_rdp_all",
+        "google_compute_subnetwork.app_subnet",
+        "google_sql_database_instance.postgres_primary"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "auto_create_subnetworks",
+          "after": false,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "name",
+          "after": "gcp-prod-vpc",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "auto_create_subnetworks": false,
+        "name": "gcp-prod-vpc"
+      }
+    },
+    {
+      "id": "google_compute_subnetwork.app_subnet",
+      "address": "google_compute_subnetwork.app_subnet",
+      "name": "app_subnet",
+      "type": "google_compute_subnetwork",
+      "provider": "google",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 1,
+      "downstream_ids": [
+        "google_sql_database_instance.postgres_primary"
+      ],
+      "upstream_ids": [
+        "google_compute_network.custom_vpc"
+      ],
+      "dependencies": [
+        "google_compute_network.custom_vpc"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "ip_cidr_range",
+          "after": "10.240.0.0/20",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "name",
+          "after": "app-subnet-europe-west3",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "region",
+          "after": "europe-west3",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "ip_cidr_range": "10.240.0.0/20",
+        "name": "app-subnet-europe-west3",
+        "region": "europe-west3"
+      }
+    },
+    {
+      "id": "google_sql_database_instance.postgres_primary",
+      "address": "google_sql_database_instance.postgres_primary",
+      "name": "postgres_primary",
+      "type": "google_sql_database_instance",
+      "provider": "google",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "database",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "google_compute_subnetwork.app_subnet"
+      ],
+      "dependencies": [
+        "google_compute_subnetwork.app_subnet"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "database_version",
+          "after": "POSTGRES_15",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "name",
+          "after": "pg-primary-cloudsql",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "settings",
+          "after": [
+            {
+              "ip_configuration": [
+                {
+                  "authorized_networks": [
+                    {
+                      "name": "any-internet",
+                      "value": "0.0.0.0/0"
+                    }
+                  ],
+                  "ipv4_enabled": true
+                }
+              ],
+              "tier": "db-custom-4-16384"
+            }
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "security_findings": [
+        {
+          "rule_id": "GCP-SEC-002",
+          "title": "Cloud SQL Instance Has Public IPv4 With 0.0.0.0/0 Authorized Network",
+          "severity": "CRITICAL",
+          "resource": "google_sql_database_instance.postgres_primary",
+          "type": "google_sql_database_instance",
+          "description": "Database instance is configured with a public IPv4 address and accepts connections from any internet IP.",
+          "remediation": "Use private IP with Cloud SQL Auth Proxy or Service Networking.",
+          "attribute": "settings.ip_configuration"
+        }
+      ],
+      "raw_after": {
+        "database_version": "POSTGRES_15",
+        "name": "pg-primary-cloudsql",
+        "settings": [
+          {
+            "ip_configuration": [
+              {
+                "authorized_networks": [
+                  {
+                    "name": "any-internet",
+                    "value": "0.0.0.0/0"
+                  }
+                ],
+                "ipv4_enabled": true
+              }
+            ],
+            "tier": "db-custom-4-16384"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "google_compute_network.custom_vpc-\u003egoogle_compute_subnetwork.app_subnet",
+      "source": "google_compute_network.custom_vpc",
+      "target": "google_compute_subnetwork.app_subnet",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "google_compute_network.custom_vpc-\u003egoogle_compute_firewall.allow_rdp_all",
+      "source": "google_compute_network.custom_vpc",
+      "target": "google_compute_firewall.allow_rdp_all",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "google_compute_subnetwork.app_subnet-\u003egoogle_sql_database_instance.postgres_primary",
+      "source": "google_compute_subnetwork.app_subnet",
+      "target": "google_sql_database_instance.postgres_primary",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    }
+  ],
+  "destruction_alerts": [],
+  "security_findings": [
+    {
+      "rule_id": "GCP-SEC-001",
+      "title": "GCP Firewall Exposes Public RDP (Port 3389)",
+      "severity": "CRITICAL",
+      "resource": "google_compute_firewall.allow_rdp_all",
+      "type": "google_compute_firewall",
+      "description": "Firewall rule permits 0.0.0.0/0 ingress to port 3389 (RDP).",
+      "remediation": "Scope source ranges to designated bastion or internal subnets.",
+      "attribute": "allow.ports"
+    },
+    {
+      "rule_id": "GCP-SEC-002",
+      "title": "Cloud SQL Instance Has Public IPv4 With 0.0.0.0/0 Authorized Network",
+      "severity": "CRITICAL",
+      "resource": "google_sql_database_instance.postgres_primary",
+      "type": "google_sql_database_instance",
+      "description": "Database instance is configured with a public IPv4 address and accepts connections from any internet IP.",
+      "remediation": "Use private IP with Cloud SQL Auth Proxy or Service Networking.",
+      "attribute": "settings.ip_configuration"
+    }
+  ],
+  "topological_order": [
+    "google_compute_network.custom_vpc",
+    "google_compute_firewall.allow_rdp_all",
+    "google_compute_subnetwork.app_subnet",
+    "google_sql_database_instance.postgres_primary"
+  ]
+}

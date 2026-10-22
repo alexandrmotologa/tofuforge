@@ -1,0 +1,522 @@
+{
+  "terraform_version": "1.9.0",
+  "format_version": "1.2",
+  "stats": {
+    "total_resources": 8,
+    "create_count": 2,
+    "update_count": 4,
+    "delete_count": 0,
+    "replace_count": 1,
+    "no_op_count": 1,
+    "read_count": 0,
+    "total_blast_radius": 38,
+    "critical_alerts_count": 1,
+    "security_issues_count": 2
+  },
+  "nodes": [
+    {
+      "id": "aws_db_instance.customer_orders_postgresql",
+      "address": "aws_db_instance.customer_orders_postgresql",
+      "name": "customer_orders_postgresql",
+      "type": "aws_db_instance",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "replace",
+      "category": "database",
+      "is_stateful": true,
+      "blast_radius_score": 38,
+      "direct_impact": true,
+      "downstream_count": 2,
+      "downstream_ids": [
+        "aws_ecs_service.order_fulfillment_api",
+        "aws_route53_record.db_internal"
+      ],
+      "upstream_ids": [
+        "aws_subnet.private_a",
+        "aws_security_group.database"
+      ],
+      "dependencies": [
+        "aws_subnet.private_a",
+        "aws_security_group.database"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "identifier",
+          "before": "production-orders-db",
+          "after": "production-orders-db-v2",
+          "forces_replacement": true,
+          "sensitive": false,
+          "type": "modified"
+        },
+        {
+          "path": "allocated_storage",
+          "before": 100,
+          "after": 250,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        },
+        {
+          "path": "instance_class",
+          "before": "db.m5.large",
+          "after": "db.m6g.xlarge",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        }
+      ],
+      "raw_before": {
+        "allocated_storage": 100,
+        "engine": "postgres",
+        "identifier": "production-orders-db",
+        "instance_class": "db.m5.large",
+        "publicly_accessible": false,
+        "storage_encrypted": true
+      },
+      "raw_after": {
+        "allocated_storage": 250,
+        "engine": "postgres",
+        "identifier": "production-orders-db-v2",
+        "instance_class": "db.m6g.xlarge",
+        "publicly_accessible": false,
+        "storage_encrypted": true
+      }
+    },
+    {
+      "id": "aws_ecs_service.order_fulfillment_api",
+      "address": "aws_ecs_service.order_fulfillment_api",
+      "name": "order_fulfillment_api",
+      "type": "aws_ecs_service",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "compute",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_db_instance.customer_orders_postgresql"
+      ],
+      "dependencies": [
+        "aws_db_instance.customer_orders_postgresql"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "desired_count",
+          "before": 4,
+          "after": 6,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        }
+      ],
+      "raw_before": {
+        "desired_count": 4
+      },
+      "raw_after": {
+        "desired_count": 6
+      }
+    },
+    {
+      "id": "aws_route53_record.db_internal",
+      "address": "aws_route53_record.db_internal",
+      "name": "db_internal",
+      "type": "aws_route53_record",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "dns",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_db_instance.customer_orders_postgresql"
+      ],
+      "dependencies": [
+        "aws_db_instance.customer_orders_postgresql"
+      ],
+      "raw_before": {
+        "name": "db.internal.acme.corp",
+        "type": "CNAME"
+      },
+      "raw_after": {
+        "name": "db.internal.acme.corp",
+        "type": "CNAME"
+      }
+    },
+    {
+      "id": "aws_s3_bucket.user_uploads",
+      "address": "aws_s3_bucket.user_uploads",
+      "name": "user_uploads",
+      "type": "aws_s3_bucket",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "storage",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "attribute_diffs": [
+        {
+          "path": "bucket",
+          "after": "acme-ecom-user-uploads-prod",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "force_destroy",
+          "after": false,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "security_findings": [
+        {
+          "rule_id": "AWS-SEC-003",
+          "title": "S3 Bucket Missing Server-Side Encryption Configuration",
+          "severity": "HIGH",
+          "resource": "aws_s3_bucket.user_uploads",
+          "type": "aws_s3_bucket",
+          "description": "Bucket does not explicitly configure server_side_encryption_configuration or aws_s3_bucket_server_side_encryption_configuration.",
+          "remediation": "Enforce AES256 or AWS KMS encryption via aws_s3_bucket_server_side_encryption_configuration.",
+          "attribute": "server_side_encryption_configuration"
+        }
+      ],
+      "raw_after": {
+        "bucket": "acme-ecom-user-uploads-prod",
+        "force_destroy": false
+      }
+    },
+    {
+      "id": "aws_security_group.database",
+      "address": "aws_security_group.database",
+      "name": "database",
+      "type": "aws_security_group",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 4,
+      "downstream_ids": [
+        "aws_db_instance.customer_orders_postgresql",
+        "aws_ecs_service.order_fulfillment_api",
+        "aws_route53_record.db_internal",
+        "aws_security_group_rule.legacy_ssh"
+      ],
+      "upstream_ids": [
+        "aws_vpc.production"
+      ],
+      "dependencies": [
+        "aws_vpc.production"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "description",
+          "before": "RDS access controls",
+          "after": "RDS access controls - tightened",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        }
+      ],
+      "raw_before": {
+        "description": "RDS access controls",
+        "name": "production-database-sg"
+      },
+      "raw_after": {
+        "description": "RDS access controls - tightened",
+        "name": "production-database-sg"
+      }
+    },
+    {
+      "id": "aws_security_group_rule.legacy_ssh",
+      "address": "aws_security_group_rule.legacy_ssh",
+      "name": "legacy_ssh",
+      "type": "aws_security_group_rule",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_security_group.database"
+      ],
+      "dependencies": [
+        "aws_security_group.database"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "cidr_blocks",
+          "after": [
+            "0.0.0.0/0"
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "description",
+          "after": "Emergency bastion jump",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "from_port",
+          "after": 22,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "protocol",
+          "after": "tcp",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "to_port",
+          "after": 22,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "type",
+          "after": "ingress",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "security_findings": [
+        {
+          "rule_id": "AWS-SEC-001",
+          "title": "Security Group Ingress Allows Public SSH (Port 22)",
+          "severity": "CRITICAL",
+          "resource": "aws_security_group_rule.legacy_ssh",
+          "type": "aws_security_group_rule",
+          "description": "Rule exposes port 22 (SSH) to 0.0.0.0/0 or ::/0 without IP restriction.",
+          "remediation": "Restrict CIDR blocks to known corporate IP ranges or internal VPC CIDRs.",
+          "attribute": "cidr_blocks"
+        }
+      ],
+      "raw_after": {
+        "cidr_blocks": [
+          "0.0.0.0/0"
+        ],
+        "description": "Emergency bastion jump",
+        "from_port": 22,
+        "protocol": "tcp",
+        "to_port": 22,
+        "type": "ingress"
+      }
+    },
+    {
+      "id": "aws_subnet.private_a",
+      "address": "aws_subnet.private_a",
+      "name": "private_a",
+      "type": "aws_subnet",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 3,
+      "downstream_ids": [
+        "aws_db_instance.customer_orders_postgresql",
+        "aws_ecs_service.order_fulfillment_api",
+        "aws_route53_record.db_internal"
+      ],
+      "upstream_ids": [
+        "aws_vpc.production"
+      ],
+      "dependencies": [
+        "aws_vpc.production"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "tags",
+          "before": {
+            "Tier": "Internal"
+          },
+          "after": {
+            "Environment": "Production",
+            "Tier": "Internal"
+          },
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        }
+      ],
+      "raw_before": {
+        "cidr_block": "10.0.1.0/24",
+        "tags": {
+          "Tier": "Internal"
+        }
+      },
+      "raw_after": {
+        "cidr_block": "10.0.1.0/24",
+        "tags": {
+          "Environment": "Production",
+          "Tier": "Internal"
+        }
+      }
+    },
+    {
+      "id": "aws_vpc.production",
+      "address": "aws_vpc.production",
+      "name": "production",
+      "type": "aws_vpc",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "no-op",
+      "category": "network",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 6,
+      "downstream_ids": [
+        "aws_db_instance.customer_orders_postgresql",
+        "aws_ecs_service.order_fulfillment_api",
+        "aws_route53_record.db_internal",
+        "aws_security_group.database",
+        "aws_security_group_rule.legacy_ssh",
+        "aws_subnet.private_a"
+      ],
+      "raw_before": {
+        "cidr_block": "10.0.0.0/16",
+        "enable_dns_hostnames": true
+      },
+      "raw_after": {
+        "cidr_block": "10.0.0.0/16",
+        "enable_dns_hostnames": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "aws_vpc.production-\u003eaws_subnet.private_a",
+      "source": "aws_vpc.production",
+      "target": "aws_subnet.private_a",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_vpc.production-\u003eaws_security_group.database",
+      "source": "aws_vpc.production",
+      "target": "aws_security_group.database",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_security_group.database-\u003eaws_security_group_rule.legacy_ssh",
+      "source": "aws_security_group.database",
+      "target": "aws_security_group_rule.legacy_ssh",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_subnet.private_a-\u003eaws_db_instance.customer_orders_postgresql",
+      "source": "aws_subnet.private_a",
+      "target": "aws_db_instance.customer_orders_postgresql",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_security_group.database-\u003eaws_db_instance.customer_orders_postgresql",
+      "source": "aws_security_group.database",
+      "target": "aws_db_instance.customer_orders_postgresql",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_db_instance.customer_orders_postgresql-\u003eaws_ecs_service.order_fulfillment_api",
+      "source": "aws_db_instance.customer_orders_postgresql",
+      "target": "aws_ecs_service.order_fulfillment_api",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_db_instance.customer_orders_postgresql-\u003eaws_route53_record.db_internal",
+      "source": "aws_db_instance.customer_orders_postgresql",
+      "target": "aws_route53_record.db_internal",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    }
+  ],
+  "destruction_alerts": [
+    {
+      "resource_address": "aws_db_instance.customer_orders_postgresql",
+      "resource_type": "aws_db_instance",
+      "category": "database",
+      "action": "replace",
+      "severity": "CRITICAL",
+      "is_stateful": true,
+      "blast_radius": 38,
+      "downstream_count": 2,
+      "downstream_paths": [
+        "aws_ecs_service.order_fulfillment_api",
+        "aws_route53_record.db_internal"
+      ],
+      "message": "CRITICAL: Stateful database (aws_db_instance.customer_orders_postgresql) is marked for DESTROY AND RECREATE. Potential persistent data loss. Impacting 2 downstream resources.",
+      "replacement_keys": [
+        "identifier"
+      ]
+    }
+  ],
+  "security_findings": [
+    {
+      "rule_id": "AWS-SEC-001",
+      "title": "Security Group Ingress Allows Public SSH (Port 22)",
+      "severity": "CRITICAL",
+      "resource": "aws_security_group_rule.legacy_ssh",
+      "type": "aws_security_group_rule",
+      "description": "Rule exposes port 22 (SSH) to 0.0.0.0/0 or ::/0 without IP restriction.",
+      "remediation": "Restrict CIDR blocks to known corporate IP ranges or internal VPC CIDRs.",
+      "attribute": "cidr_blocks"
+    },
+    {
+      "rule_id": "AWS-SEC-003",
+      "title": "S3 Bucket Missing Server-Side Encryption Configuration",
+      "severity": "HIGH",
+      "resource": "aws_s3_bucket.user_uploads",
+      "type": "aws_s3_bucket",
+      "description": "Bucket does not explicitly configure server_side_encryption_configuration or aws_s3_bucket_server_side_encryption_configuration.",
+      "remediation": "Enforce AES256 or AWS KMS encryption via aws_s3_bucket_server_side_encryption_configuration.",
+      "attribute": "server_side_encryption_configuration"
+    }
+  ],
+  "topological_order": [
+    "aws_s3_bucket.user_uploads",
+    "aws_vpc.production",
+    "aws_security_group.database",
+    "aws_security_group_rule.legacy_ssh",
+    "aws_subnet.private_a",
+    "aws_db_instance.customer_orders_postgresql",
+    "aws_ecs_service.order_fulfillment_api",
+    "aws_route53_record.db_internal"
+  ]
+}
