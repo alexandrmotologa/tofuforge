@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/alexandrmotologa/tofuforge/internal/diff"
 	"github.com/alexandrmotologa/tofuforge/internal/engine"
 	"github.com/alexandrmotologa/tofuforge/internal/model"
 	"github.com/alexandrmotologa/tofuforge/internal/parser"
@@ -62,6 +63,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/samples", s.handleSamples)
 	mux.HandleFunc("/api/samples/select", s.handleSelectSample)
 	mux.HandleFunc("/api/markdown", s.handleMarkdown)
+	mux.HandleFunc("/api/diff", s.handleDiff)
+	mux.HandleFunc("/api/report/html", s.handleHTMLReport)
 
 	// Static assets handler with SPA fallback
 	distSub, err := fs.Sub(DistFS, "dist")
@@ -273,4 +276,69 @@ func (s *Server) handleMarkdown(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
 	w.Write([]byte(md))
+}
+
+func (s *Server) handleHTMLReport(w http.ResponseWriter, r *http.Request) {
+	s.mu.RLock()
+	plan := s.activePlan
+	s.mu.RUnlock()
+
+	if plan == nil {
+		http.Error(w, "No active plan loaded", http.StatusNotFound)
+		return
+	}
+
+	html, err := reporter.GenerateStandaloneHTML(plan)
+	if err != nil {
+		http.Error(w, "Failed to generate HTML report: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"tofuforge-report.html\"")
+	w.Write([]byte(html))
+}
+
+type DiffRequest struct {
+	BasePlanID   string              `json:"base_plan_id"`
+	TargetPlanID string              `json:"target_plan_id"`
+	BasePlan     *model.AnalyzedPlan `json:"base_plan"`
+	TargetPlan   *model.AnalyzedPlan `json:"target_plan"`
+}
+
+func (s *Server) handleDiff(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req DiffRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	s.mu.RLock()
+	base := req.BasePlan
+	if base == nil && req.BasePlanID != "" {
+		base = s.samples[req.BasePlanID]
+	}
+	target := req.TargetPlan
+	if target == nil && req.TargetPlanID != "" {
+		target = s.samples[req.TargetPlanID]
+	}
+	if base == nil {
+		base = s.activePlan
+	}
+	s.mu.RUnlock()
+
+	if base == nil || target == nil {
+		http.Error(w, "Both base and target plans must be provided or resolved from samples", http.StatusBadRequest)
+		return
+	}
+
+	comp := diff.ComparePlans(base, target)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(comp)
 }

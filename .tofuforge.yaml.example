@@ -1,0 +1,18 @@
+# TofuForge Governance & Policy Configuration
+version: 1
+
+rules:
+  # Security rule IDs to ignore (e.g. AWS-SEC-003)
+  ignore: []
+
+  # High-priority rules that should always enforce strict failures
+  strict_rules:
+    - "AWS-SEC-001"
+    - "GCP-SEC-001"
+    - "AZ-SEC-001"
+
+# Required tags that every taggable cloud resource must define
+mandatory_tags:
+  - "Environment"
+  - "Owner"
+  - "CostCenter"

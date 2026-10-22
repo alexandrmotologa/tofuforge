@@ -11,7 +11,10 @@
     "read_count": 0,
     "total_blast_radius": 0,
     "critical_alerts_count": 0,
-    "security_issues_count": 2
+    "security_issues_count": 2,
+    "total_monthly_before": 0,
+    "total_monthly_after": 149,
+    "total_monthly_delta": 149
   },
   "nodes": [
     {
@@ -263,6 +266,13 @@
           "attribute": "settings.ip_configuration"
         }
       ],
+      "cost": {
+        "monthly_before": 0,
+        "monthly_after": 149,
+        "monthly_delta": 149,
+        "currency": "USD",
+        "description": "GCP Cloud SQL database tier"
+      },
       "raw_after": {
         "database_version": "POSTGRES_15",
         "name": "pg-primary-cloudsql",

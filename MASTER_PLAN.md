@@ -62,11 +62,21 @@ TofuForge provides an automated visual inspection and pre-flight safety control 
 tofuforge/
 ├── cmd/
 │   └── tofuforge/
-│       └── main.go               # CLI entrypoint (inspect, serve, pr-comment)
+│       └── main.go               # CLI entrypoint (inspect, serve, pr-comment, diff, report)
 ├── internal/
+│   ├── config/
+│   │   └── config.go             # .tofuforge.yaml policy parser and tag requirements
+│   ├── cost/
+│   │   ├── pricing_table.go      # Cloud unit cost tables (AWS, GCP, Azure)
+│   │   └── cost_estimator.go     # Monthly cost delta calculator
+│   ├── diff/
+│   │   ├── plan_diff.go          # Plan-to-plan comparison and alert resolution engine
+│   │   └── diff_reporter.go      # Terminal and markdown PR revision comparison
+│   ├── remediation/
+│   │   └── hcl.go                # HCL lifecycle block and safeguard generator
 │   ├── model/
 │   │   ├── plan.go               # Unified data structures for plans, changes, diffs
-│   │   └── analysis.go           # Graph, blast radius, and security analysis models
+│   │   └── analysis.go           # Graph, blast radius, security, and cost models
 │   ├── parser/
 │   │   ├── plan_parser.go        # Terraform and OpenTofu JSON schema ingestion
 │   │   ├── actions.go            # Action classifier (create, update, delete, replace)
@@ -83,7 +93,8 @@ tofuforge/
 │   │   └── rules_k8s.go          # Security rules for Kubernetes (Pod security)
 │   ├── reporter/
 │   │   ├── markdown.go           # GitHub PR comment table generator
-│   │   └── terminal.go           # Colorized ANSI terminal report generator
+│   │   ├── terminal.go           # Colorized ANSI terminal report generator
+│   │   └── html.go               # Standalone single-file HTML report generator
 │   └── server/
 │       ├── api.go                # Embedded HTTP REST API for web studio
 │       └── static.go             # Embedded Vite frontend assets (//go:embed)
@@ -91,12 +102,13 @@ tofuforge/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── PlanGraphView.tsx     # React Flow interactive DAG diagram
-│   │   │   ├── CustomResourceNode.tsx# Custom node component with action styles
-│   │   │   ├── DestructionAlerts.tsx # Critical alerts for replaced/deleted nodes
+│   │   │   ├── CustomResourceNode.tsx# Custom node component with action & cost styles
+│   │   │   ├── DestructionAlerts.tsx # Critical alerts & copyable HCL lifecycle snippets
 │   │   │   ├── ResourceDiffModal.tsx # Side-by-side attribute before/after diff
 │   │   │   ├── SecurityAuditList.tsx # Categorized pre-flight security findings
 │   │   │   ├── PlanDropzone.tsx      # Drag and drop upload for JSON plans
-│   │   │   └── StatCards.tsx         # Overview metrics cards
+│   │   │   ├── PlanDiffModal.tsx     # Side-by-side plan-to-plan comparison modal
+│   │   │   └── StatCards.tsx         # Overview metrics cards with cost delta
 │   │   ├── samples/
 │   │   │   └── samplePlans.ts        # Built-in realistic sample plans
 │   │   ├── types/
@@ -109,6 +121,7 @@ tofuforge/
 │   └── tailwind.config.js
 ├── fixtures/
 │   ├── aws_production_ecommerce.json # Real-world plan with RDS recreation
+│   ├── aws_production_fixed.json     # Revised plan with RDS recreation fixed
 │   ├── gcp_microservices.json        # Real-world GCP plan with open firewall
 │   └── clean_infrastructure.json     # Clean plan without security flaws
 ├── docs/
@@ -151,10 +164,7 @@ tofuforge/
 ### Phase 4: Reporters & CLI Implementation
 - [x] Task 4.1: Implement `internal/reporter/terminal.go` for ANSI color-coded terminal reports with risk scores.
 - [x] Task 4.2: Implement `internal/reporter/markdown.go` for clean GitHub PR comment generation.
-- [x] Task 4.3: Implement CLI commands in `cmd/tofuforge/main.go`:
-  - `inspect <plan.json>`: Runs analysis, outputs terminal or JSON, supports CI failure flags.
-  - `pr-comment <plan.json>`: Generates Markdown PR summary to stdout or file.
-  - `serve <plan.json>`: Starts embedded web server on specified port.
+- [x] Task 4.3: Implement CLI commands in `cmd/tofuforge/main.go` (`inspect`, `pr-comment`, `serve`).
 - [x] Task 4.4: Add CI gating flags: `--fail-on-destructive`, `--fail-on-security-critical`, `--max-blast-radius <int>`.
 
 ### Phase 5: Web Studio Frontend (React 19 + React Flow + Tailwind CSS)
@@ -170,10 +180,32 @@ tofuforge/
 
 ### Phase 6: Documentation, Test Fixtures & Validation
 - [x] Task 6.1: Create realistic test plan fixtures in `fixtures/` (AWS e-commerce destruction, GCP microservices, clean plan).
-- [x] Task 6.2: Write comprehensive documentation:
-  - `README.md` with architecture diagram, quickstart, CLI reference, and screenshots.
-  - `docs/ARCHITECTURE.md` detailing internal components and DAG traversal.
-  - `docs/SECURITY_RULES.md` listing all security checks with remediation instructions.
-  - `docs/CLI_USAGE.md` covering CI/CD pipelines (GitHub Actions, GitLab CI).
+- [x] Task 6.2: Write comprehensive documentation (`README.md`, `docs/ARCHITECTURE.md`, `docs/SECURITY_RULES.md`, `docs/CLI_USAGE.md`).
 - [x] Task 6.3: Run full verification suite (Go tests, React build, binary build, CLI execution).
 - [x] Task 6.4: Capture authentic visual assets (UI screenshot, terminal run, animated demo) and trigger Phase 2 portfolio sync.
+
+### Phase 7: Advanced Enterprise Extensions
+- [x] Task 7.1: **Policy Configuration & Tagging Enforcement (`.tofuforge.yaml`)**:
+  - Implement `internal/config/config.go` with rule ignore lists, custom thresholds, and mandatory tag checks.
+  - Wire into security linter to flag resources missing mandatory tags (e.g. `Environment`, `Owner`).
+- [x] Task 7.2: **Cloud Cost Estimation & Delta Calculator (`IaC Cost Guard`)**:
+  - Implement `internal/cost/cost_estimator.go` with heuristics for AWS, GCP, and Azure compute, storage, and networking.
+  - Calculate monthly before/after costs and total monthly delta.
+  - Integrate with terminal, PR markdown, and CLI gating (`--max-cost-delta`).
+- [x] Task 7.3: **Plan-to-Plan Diff & Review Comparison Engine (`tofuforge diff`)**:
+  - Implement `internal/diff/plan_diff.go` comparing two plans (`base.json` vs `target.json`).
+  - Compute resolved destruction alerts, newly introduced risks, and blast radius delta.
+  - CLI subcommand `tofuforge diff base.json target.json`.
+- [x] Task 7.4: **HCL Lifecycle Remediation Generator**:
+  - Implement `internal/remediation/hcl.go` generating copyable HCL blocks (`prevent_destroy`, `create_before_destroy`, `ignore_changes`).
+- [x] Task 7.5: **Standalone Single-File HTML Report Generator (`tofuforge report`)**:
+  - Implement `internal/reporter/html.go` bundling the visual studio and plan data into a self-contained offline HTML file.
+  - CLI subcommand `tofuforge report tfplan.json -o report.html`.
+- [x] Task 7.6: **Frontend Web Studio Upgrades**:
+  - Add layout toggles: Top-to-Bottom, Left-to-Right, Module Clustering.
+  - Display cost delta badge on nodes and in top stats bar.
+  - Add copyable HCL remediation code snippet to destruction alerts.
+  - Add Plan Comparison view.
+  - Export standalone HTML from UI.
+- [x] Task 7.7: **Documentation & Verification**:
+  - Update `README.md`, `docs/CLI_USAGE.md`, add `fixtures/aws_production_fixed.json`, run all tests.

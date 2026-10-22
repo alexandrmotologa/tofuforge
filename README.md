@@ -17,7 +17,9 @@
   <a href="#key-capabilities">Key Capabilities</a> •
   <a href="#quickstart">Quickstart</a> •
   <a href="#cli-reference">CLI Reference</a> •
+  <a href="#plan-to-plan-diff">Plan Diff Engine</a> •
   <a href="#pre-flight-security-rules">Security Rules</a> •
+  <a href="#policy-configuration">Policy Config</a> •
   <a href="#ci-cd-integration">CI/CD Gating</a>
 </p>
 
@@ -41,9 +43,11 @@ TofuForge is a single-binary static analysis engine and interactive visual studi
 1. Ingests raw JSON plan files (`terraform show -json` and `tofu show -json`).
 2. Builds an explicit and implicit dependency directed acyclic graph (DAG).
 3. Computes downstream blast radius for every resource scheduled for destruction or recreation.
-4. Audits pre-flight security configurations against 18 multi-cloud rules (AWS, GCP, Azure, Kubernetes).
-5. Generates compact GitHub Flavored Markdown summaries for pull request comments.
-6. Serves an interactive React 19 web studio with real-time cascade tracing.
+4. Estimates cloud cost deltas across compute, storage, and database tiers.
+5. Audits pre-flight security and tagging rules across AWS, GCP, Azure, and Kubernetes.
+6. Compares consecutive plan revisions (`tofuforge diff`) to verify remediated risks.
+7. Produces self-contained offline HTML reports and compact GitHub PR comment summaries.
+8. Serves an interactive React 19 web studio with real-time cascade tracing.
 
 ---
 
@@ -66,9 +70,11 @@ TofuForge is a single-binary static analysis engine and interactive visual studi
 - **Universal Plan Support**: Works across all major cloud providers (AWS, Google Cloud, Microsoft Azure, Kubernetes) with standard JSON plan outputs from Terraform 0.12+ and all OpenTofu versions.
 - **Blast-Radius DAG Engine**: Traces transitive downstream dependencies using breadth-first traversal. Computes a cumulative risk score that factors resource statefulness and dependency depth.
 - **Destruction & Recreation Guard**: Flags database instances, object storage buckets, encryption keys, and virtual networks undergoing replacement with high-visibility alerts.
-- **Pre-Flight Cloud Security Linter**: Detects `0.0.0.0/0` ingress rules on sensitive ports (22, 3389, 5432), unencrypted S3 buckets, public RDS instances, wildcard IAM statements, and privileged Kubernetes containers.
-- **Automated PR Reporter**: Generates structured Markdown tables summarizing changes (+Create, ~Update, -Delete, ±Replace), critical destruction callouts, security findings, and collapsible attribute diffs.
-- **Self-Contained Executable**: The React 19 frontend is compiled and embedded into the Go binary via `//go:embed`. No external node runtime, python, or docker daemon required.
+- **HCL Lifecycle Safeguards**: Automatically generates copyable HCL blocks (`prevent_destroy = true`, `create_before_destroy = true`) directly within destruction alerts.
+- **Cloud Cost Guard**: Calculates monthly before/after costs and delta figures for provisioned virtual machines, databases, and disks.
+- **Plan Revision Comparison**: Evaluates deltas between base and target plan revisions, verifying when destructions are eliminated.
+- **Standalone Offline HTML Reports**: Bundles the full React 19 visual studio into a single zero-dependency HTML file suitable for air-gapped archives or CI artifacts.
+- **Pre-Flight Security & Tagging**: Detects open ingress rules, unencrypted disks and buckets, wildcard IAM policies, and enforces mandatory governance tags.
 
 ---
 
@@ -122,7 +128,7 @@ Navigate to `http://localhost:8080` to explore the DAG, trace cascading impact, 
 ## CLI Reference
 
 ### `tofuforge inspect [plan.json]`
-Evaluates changes, scores blast radius, checks security policies, and executes CI gates.
+Evaluates changes, scores blast radius, checks security policies, calculates cost deltas, and executes CI gates.
 
 ```bash
 # Basic inspection
@@ -134,17 +140,37 @@ tofuforge inspect tfplan.json --json
 # Generate PR comment markdown file
 tofuforge inspect tfplan.json -o pr-comment.md
 
+# Load custom governance policy
+tofuforge inspect tfplan.json -c .tofuforge.yaml
+
 # CI Gating: Fail if any resource is deleted or replaced
 tofuforge inspect tfplan.json --fail-on-destructive
 
 # CI Gating: Fail if stateful resources (databases, storage) undergo recreation
 tofuforge inspect tfplan.json --fail-on-critical
 
-# CI Gating: Fail on critical security flaws (open SSH/RDP/database ports)
+# CI Gating: Fail on critical security flaws
 tofuforge inspect tfplan.json --fail-on-security
 
 # CI Gating: Fail if cumulative blast radius exceeds threshold
 tofuforge inspect tfplan.json --max-blast-radius 25
+
+# CI Gating: Fail if monthly cost delta exceeds budget limit
+tofuforge inspect tfplan.json --max-cost-delta 100.0
+```
+
+### `tofuforge diff [base.json] [target.json]`
+Compares two plan revisions to verify resolved destruction risks and track security regressions.
+
+```bash
+tofuforge diff prior_plan.json fixed_plan.json
+```
+
+### `tofuforge report [plan.json]`
+Generates a standalone, self-contained single-file HTML visualizer report that works completely offline.
+
+```bash
+tofuforge report tfplan.json -o tofuforge-report.html
 ```
 
 ### `tofuforge pr-comment [plan.json]`
@@ -159,6 +185,32 @@ Starts the embedded web studio HTTP server.
 
 ```bash
 tofuforge serve tfplan.json --port 8080 --host localhost
+```
+
+---
+
+## Plan-to-Plan Diff
+
+When updating infrastructure code to fix accidental recreation, developers can compare the initial plan against the revised plan using `tofuforge diff`:
+
+```
+================================================================================
+                    TOFUFORGE PLAN REVISION COMPARISON                          
+================================================================================
+Blast Radius Score Delta:  -38 (Prior: 38 -> Current: 0)
+Critical Alerts Delta:      -1
+Security Flaws Delta:       -2
+
+[RESOLVED DESTRUCTIONS]:
+  ✓ aws_db_instance.customer_orders_postgresql - no longer marked for replace
+
+[RESOLVED SECURITY FINDINGS]:
+  ✓ AWS-SEC-001: Security Group Ingress Allows Public SSH (Port 22)
+  ✓ AWS-SEC-003: S3 Bucket Missing Server-Side Encryption Configuration
+
+[ACTION TRANSITIONS]:
+  • aws_db_instance.customer_orders_postgresql: replace -> update
+================================================================================
 ```
 
 ---
@@ -185,6 +237,33 @@ tofuforge serve tfplan.json --port 8080 --host localhost
 | **K8s** | `K8S-SEC-001` | Container runs in privileged mode | `CRITICAL` |
 | **K8s** | `K8S-SEC-002` | Container does not enforce non-root execution | `HIGH` |
 | **K8s** | `K8S-SEC-003` | Workload container missing CPU or memory resource limits | `MEDIUM` |
+| **Governance** | `TAG-SEC-001` | Resource missing mandatory organizational governance tags | `HIGH` |
+
+---
+
+## Policy Configuration
+
+Create a `.tofuforge.yaml` file to customize linting rules and enforce tagging standards:
+
+```yaml
+version: 1
+
+rules:
+  # Rule IDs to ignore across checks
+  ignore:
+    - "AWS-SEC-007"
+
+  # High-priority rules that trigger strict failure
+  strict_rules:
+    - "AWS-SEC-001"
+    - "GCP-SEC-001"
+
+# Mandatory tags required for every taggable resource
+mandatory_tags:
+  - "Environment"
+  - "Owner"
+  - "CostCenter"
+```
 
 ---
 
@@ -221,6 +300,7 @@ jobs:
           tofuforge inspect tfplan.json \
             --fail-on-critical \
             --fail-on-security \
+            --max-cost-delta 200 \
             -o pr-summary.md
 
       - name: Post Comment to PR

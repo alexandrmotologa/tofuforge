@@ -38,6 +38,14 @@ export interface DestructionAlert {
   replacement_keys?: string[];
 }
 
+export interface CostEstimate {
+  monthly_before: number;
+  monthly_after: number;
+  monthly_delta: number;
+  currency: string;
+  description?: string;
+}
+
 export interface ResourceNode {
   id: string;
   address: string;
@@ -57,6 +65,7 @@ export interface ResourceNode {
   dependencies?: string[];
   attribute_diffs?: AttributeDiff[];
   security_findings?: SecurityFinding[];
+  cost?: CostEstimate;
   raw_before?: Record<string, any>;
   raw_after?: Record<string, any>;
 }
@@ -80,6 +89,9 @@ export interface SummaryStats {
   total_blast_radius: number;
   critical_alerts_count: number;
   security_issues_count: number;
+  total_monthly_before?: number;
+  total_monthly_after?: number;
+  total_monthly_delta?: number;
 }
 
 export interface AnalyzedPlan {
@@ -91,4 +103,31 @@ export interface AnalyzedPlan {
   destruction_alerts: DestructionAlert[];
   security_findings: SecurityFinding[];
   topological_order?: string[];
+}
+
+export interface ActionChange {
+  address: string;
+  base_action: Action;
+  target_action: Action;
+}
+
+export interface PlanComparison {
+  base_stats: SummaryStats;
+  target_stats: SummaryStats;
+  blast_radius_delta: number;
+  cost_delta: number;
+  resolved_destruction: DestructionAlert[];
+  new_destruction: DestructionAlert[];
+  persisting_destruction: DestructionAlert[];
+  resolved_security: SecurityFinding[];
+  new_security: SecurityFinding[];
+  added_resources: string[];
+  removed_resources: string[];
+  action_changes: ActionChange[];
+}
+
+declare global {
+  interface Window {
+    __TOFUFORGE_PRELOADED_PLAN__?: AnalyzedPlan;
+  }
 }

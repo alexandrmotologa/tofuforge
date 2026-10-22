@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ChevronLeft,
   X,
-  Sparkles
+  Sparkles,
+  GitCompare,
+  Download
 } from 'lucide-react';
 import type { AnalyzedPlan, ResourceNode } from './types';
 import { SAMPLE_PLANS } from './samples/samplePlans';
@@ -21,11 +23,23 @@ import { SecurityAuditList } from './components/SecurityAuditList';
 import { ResourceDiffModal } from './components/ResourceDiffModal';
 import { PlanDropzone } from './components/PlanDropzone';
 import { PRMarkdownModal } from './components/PRMarkdownModal';
+import { PlanDiffModal } from './components/PlanDiffModal';
 
 export const App: React.FC = () => {
   // Current active plan
-  const [currentPlan, setCurrentPlan] = useState<AnalyzedPlan>(SAMPLE_PLANS[0].plan);
-  const [activeSampleId, setActiveSampleId] = useState<string>(SAMPLE_PLANS[0].id);
+  const [currentPlan, setCurrentPlan] = useState<AnalyzedPlan>(() => {
+    if (typeof window !== 'undefined' && window.__TOFUFORGE_PRELOADED_PLAN__) {
+      return window.__TOFUFORGE_PRELOADED_PLAN__;
+    }
+    return SAMPLE_PLANS[0].plan;
+  });
+
+  const [activeSampleId, setActiveSampleId] = useState<string>(() => {
+    if (typeof window !== 'undefined' && window.__TOFUFORGE_PRELOADED_PLAN__) {
+      return '';
+    }
+    return SAMPLE_PLANS[0].id;
+  });
 
   // UI state
   const [selectedNode, setSelectedNode] = useState<ResourceNode | null>(null);
@@ -35,10 +49,15 @@ export const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isDropzoneOpen, setIsDropzoneOpen] = useState<boolean>(false);
   const [isMarkdownModalOpen, setIsMarkdownModalOpen] = useState<boolean>(false);
+  const [isDiffModalOpen, setIsDiffModalOpen] = useState<boolean>(false);
   const [isServerConnected, setIsServerConnected] = useState<boolean>(false);
 
-  // Try checking backend /api/plan on load
+  // Try checking backend /api/plan on load if not preloaded
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.__TOFUFORGE_PRELOADED_PLAN__) {
+      return;
+    }
+
     fetch('/api/plan')
       .then(res => {
         if (res.ok) return res.json();
@@ -80,6 +99,28 @@ export const App: React.FC = () => {
 
   const handleSelectNode = (node: ResourceNode) => {
     setSelectedNode(node);
+  };
+
+  const handleExportHTML = () => {
+    if (isServerConnected) {
+      window.open('/api/report/html', '_blank');
+      return;
+    }
+
+    // Client-side fallback: generate standalone HTML with embedded state
+    const docClone = document.documentElement.outerHTML;
+    const injectionScript = `<script>window.__TOFUFORGE_PRELOADED_PLAN__ = ${JSON.stringify(currentPlan)};</script>`;
+    const fullHTML = `<!DOCTYPE html>\n${docClone.replace('</head>', `${injectionScript}</head>`)}`;
+
+    const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'tofuforge-report.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getStatusBadge = () => {
@@ -128,7 +169,7 @@ export const App: React.FC = () => {
                 Tofu<span className="text-amber-400">Forge</span>
               </span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                v1.0
+                v1.1
               </span>
             </div>
             <div className="text-[10px] text-slate-400 hidden sm:block">
@@ -152,6 +193,7 @@ export const App: React.FC = () => {
               onChange={e => handleSelectSample(e.target.value)}
               className="bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer pr-2"
             >
+              {activeSampleId === '' && <option value="" className="bg-slate-900">Custom / Ingested Plan</option>}
               {SAMPLE_PLANS.map(s => (
                 <option key={s.id} value={s.id} className="bg-slate-900 text-slate-200">
                   {s.title}
@@ -163,6 +205,17 @@ export const App: React.FC = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Plan-to-Plan Diff Button */}
+          <button
+            onClick={() => setIsDiffModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            title="Compare two plan revisions"
+          >
+            <GitCompare className="w-4 h-4 text-purple-400" />
+            <span className="hidden lg:inline">Compare Diff</span>
+          </button>
+
+          {/* Ingest Plan Button */}
           <button
             onClick={() => setIsDropzoneOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
@@ -171,12 +224,23 @@ export const App: React.FC = () => {
             <span className="hidden sm:inline">Ingest Plan</span>
           </button>
 
+          {/* PR Comment Markdown */}
           <button
             onClick={() => setIsMarkdownModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition"
           >
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">PR Comment</span>
+          </button>
+
+          {/* Export Offline HTML Report */}
+          <button
+            onClick={handleExportHTML}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            title="Download standalone offline HTML report"
+          >
+            <Download className="w-4 h-4 text-amber-400" />
+            <span className="hidden xl:inline">Export HTML</span>
           </button>
 
           <a
@@ -363,6 +427,15 @@ export const App: React.FC = () => {
         <PRMarkdownModal
           plan={currentPlan}
           onClose={() => setIsMarkdownModalOpen(false)}
+        />
+      )}
+
+      {/* Plan-to-Plan Diff Modal */}
+      {isDiffModalOpen && (
+        <PlanDiffModal
+          currentPlan={currentPlan}
+          onApplyPlan={handlePlanUploaded}
+          onClose={() => setIsDiffModalOpen(false)}
         />
       )}
     </div>

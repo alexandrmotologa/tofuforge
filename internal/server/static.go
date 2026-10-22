@@ -1,8 +1,10 @@
 package server
 
-import "embed"
+import (
+	"io/fs"
 
-// DistFS embeds the web studio compiled frontend assets.
-//
-//go:embed all:dist
-var DistFS embed.FS
+	"github.com/alexandrmotologa/tofuforge/internal/assets"
+)
+
+// DistFS references the web studio compiled frontend assets.
+var DistFS fs.FS = assets.DistFS

@@ -33,7 +33,18 @@ func GenerateMarkdownReport(plan *model.AnalyzedPlan) string {
 	sb.WriteString(fmt.Sprintf("| **Resources to Replace** | `±%d` | Destroy and recreate cycles |\n", plan.Stats.ReplaceCount))
 	sb.WriteString(fmt.Sprintf("| **Total Blast Radius Score** | `%d` | Cumulative downstream risk |\n", plan.Stats.TotalBlastRadius))
 	sb.WriteString(fmt.Sprintf("| **Critical Destruction Alerts** | `%d` | Stateful or cascading risks |\n", plan.Stats.CriticalAlertsCount))
-	sb.WriteString(fmt.Sprintf("| **Security Findings** | `%d` | Pre-flight policy violations |\n\n", plan.Stats.SecurityIssuesCount))
+	sb.WriteString(fmt.Sprintf("| **Security Findings** | `%d` | Pre-flight policy violations |\n", plan.Stats.SecurityIssuesCount))
+
+	// Cost metrics in overview table
+	if plan.Stats.TotalMonthlyDelta != 0 || plan.Stats.TotalMonthlyAfter != 0 {
+		sign := "+"
+		if plan.Stats.TotalMonthlyDelta < 0 {
+			sign = ""
+		}
+		sb.WriteString(fmt.Sprintf("| **Estimated Cost Delta** | `%s$%.2f/mo` | Monthly infrastructure expense change |\n",
+			sign, plan.Stats.TotalMonthlyDelta))
+	}
+	sb.WriteString("\n")
 
 	// Destruction Alerts Section
 	if len(plan.DestructionAlerts) > 0 {

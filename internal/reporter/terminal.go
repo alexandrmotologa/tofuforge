@@ -54,7 +54,20 @@ func RenderTerminal(w io.Writer, plan *model.AnalyzedPlan, noColor bool) {
 	fmt.Fprintf(w, "  ± Replace:      %s\n", c(colorMagenta, fmt.Sprintf("%d", plan.Stats.ReplaceCount)))
 	fmt.Fprintf(w, "  Total Blast Radius Score:  %s\n", c(colorBold, fmt.Sprintf("%d", plan.Stats.TotalBlastRadius)))
 	fmt.Fprintf(w, "  Critical Alerts:           %s\n", c(colorRed, fmt.Sprintf("%d", plan.Stats.CriticalAlertsCount)))
-	fmt.Fprintf(w, "  Security Violations:       %s\n\n", c(colorYellow, fmt.Sprintf("%d", plan.Stats.SecurityIssuesCount)))
+	fmt.Fprintf(w, "  Security Violations:       %s\n", c(colorYellow, fmt.Sprintf("%d", plan.Stats.SecurityIssuesCount)))
+
+	if plan.Stats.TotalMonthlyDelta != 0 || plan.Stats.TotalMonthlyAfter != 0 {
+		costColor := colorGreen
+		if plan.Stats.TotalMonthlyDelta > 0 {
+			costColor = colorYellow
+		}
+		sign := "+"
+		if plan.Stats.TotalMonthlyDelta < 0 {
+			sign = ""
+		}
+		fmt.Fprintf(w, "  Estimated Cost Delta:      %s\n", c(costColor, fmt.Sprintf("%s$%.2f/mo", sign, plan.Stats.TotalMonthlyDelta)))
+	}
+	fmt.Fprintln(w)
 
 	// Destruction Alerts
 	if len(plan.DestructionAlerts) > 0 {

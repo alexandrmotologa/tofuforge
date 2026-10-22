@@ -3,21 +3,33 @@ package engine
 import (
 	"sort"
 
+	"github.com/alexandrmotologa/tofuforge/internal/config"
+	"github.com/alexandrmotologa/tofuforge/internal/cost"
 	"github.com/alexandrmotologa/tofuforge/internal/graph"
 	"github.com/alexandrmotologa/tofuforge/internal/model"
 	"github.com/alexandrmotologa/tofuforge/internal/security"
 )
 
-// Analyze processes a parsed raw plan through DAG construction, blast radius calculation, and security linting.
+// Analyze processes a raw plan with default governance configuration.
 func Analyze(raw *model.RawPlan) *model.AnalyzedPlan {
+	return AnalyzeWithConfig(raw, config.DefaultConfig())
+}
+
+// AnalyzeWithConfig processes a raw plan applying user-defined configuration policies.
+func AnalyzeWithConfig(raw *model.RawPlan, cfg *config.Config) *model.AnalyzedPlan {
+	if cfg == nil {
+		cfg = config.DefaultConfig()
+	}
+
 	g := graph.BuildGraph(raw)
 	alerts := g.ComputeBlastRadius()
 	order, _ := g.TopologicalSort()
-	findings := security.Lint(g.Nodes)
+	findings := security.LintWithConfig(g.Nodes, cfg)
 
-	// Collect nodes slice sorted by address
+	// Collect nodes slice sorted by address and compute cost estimates
 	nodes := make([]model.ResourceNode, 0, len(g.Nodes))
 	for _, n := range g.Nodes {
+		n.Cost = cost.EstimateNodeCost(n)
 		nodes = append(nodes, *n)
 	}
 	sort.Slice(nodes, func(i, j int) bool {
@@ -53,6 +65,12 @@ func Analyze(raw *model.RawPlan) *model.AnalyzedPlan {
 			stats.CriticalAlertsCount++
 		}
 	}
+
+	// Compute financial cost metrics
+	beforeCost, afterCost, deltaCost := cost.ComputePlanCostAggregates(nodes)
+	stats.TotalMonthlyBefore = beforeCost
+	stats.TotalMonthlyAfter = afterCost
+	stats.TotalMonthlyDelta = deltaCost
 
 	return &model.AnalyzedPlan{
 		TerraformVersion:  raw.TerraformVersion,

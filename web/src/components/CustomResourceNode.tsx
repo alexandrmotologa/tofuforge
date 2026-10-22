@@ -13,7 +13,8 @@ import {
   PlusCircle,
   RefreshCw,
   Trash2,
-  CheckCircle2
+  CheckCircle2,
+  DollarSign
 } from 'lucide-react';
 import type { ResourceNode } from '../types';
 
@@ -152,6 +153,17 @@ export const CustomResourceNode = memo(({ data }: CustomResourceNodeProps) => {
         {node.downstream_count > 0 && (
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
             Downstream: {node.downstream_count}
+          </span>
+        )}
+
+        {node.cost && node.cost.monthly_delta !== undefined && Math.abs(node.cost.monthly_delta) > 0.001 && (
+          <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-mono font-medium ${
+            node.cost.monthly_delta > 0 
+              ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' 
+              : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+          }`}>
+            <DollarSign className="w-3 h-3" />
+            {node.cost.monthly_delta > 0 ? '+' : '-'}${Math.abs(node.cost.monthly_delta).toFixed(2)}/mo
           </span>
         )}
 

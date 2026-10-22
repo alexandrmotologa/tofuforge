@@ -11,7 +11,10 @@
     "read_count": 0,
     "total_blast_radius": 0,
     "critical_alerts_count": 0,
-    "security_issues_count": 0
+    "security_issues_count": 0,
+    "total_monthly_before": 0,
+    "total_monthly_after": 0,
+    "total_monthly_delta": 0
   },
   "nodes": [
     {

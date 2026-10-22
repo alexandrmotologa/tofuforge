@@ -1,6 +1,7 @@
-import React from 'react';
-import { Flame, ArrowRight, CornerDownRight, Focus, AlertOctagon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Flame, ArrowRight, CornerDownRight, Focus, AlertOctagon, Copy, Check, Code2 } from 'lucide-react';
 import type { DestructionAlert, ResourceNode } from '../types';
+import { generateHCLSafeguard } from '../utils/remediation';
 
 interface DestructionAlertsProps {
   alerts: DestructionAlert[];
@@ -13,11 +14,19 @@ export const DestructionAlerts: React.FC<DestructionAlertsProps> = ({
   nodes,
   onSelectNode,
 }) => {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
   const nodeMap = React.useMemo(() => {
     const map = new Map<string, ResourceNode>();
     nodes.forEach(n => map.set(n.address, n));
     return map;
   }, [nodes]);
+
+  const handleCopySnippet = (snippet: string, index: number) => {
+    navigator.clipboard.writeText(snippet);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
   if (alerts.length === 0) {
     return (
@@ -41,6 +50,13 @@ export const DestructionAlerts: React.FC<DestructionAlertsProps> = ({
 
       {alerts.map((alert, idx) => {
         const targetNode = nodeMap.get(alert.resource_address);
+        const remediation = generateHCLSafeguard({
+          resource_address: alert.resource_address,
+          action: alert.action,
+          is_stateful: alert.is_stateful,
+          replacement_keys: alert.replacement_keys,
+          category: alert.category,
+        });
 
         return (
           <div
@@ -118,6 +134,39 @@ export const DestructionAlerts: React.FC<DestructionAlertsProps> = ({
                 </div>
               </div>
             )}
+
+            {/* HCL Remediation Lifecycle Block */}
+            <div className="mt-2.5 p-2.5 rounded-lg bg-slate-950/90 border border-slate-800">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-400">
+                  <Code2 className="w-3.5 h-3.5" />
+                  <span>HCL Lifecycle Safeguard</span>
+                </div>
+                <button
+                  onClick={() => handleCopySnippet(remediation.snippet, idx)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+                  title="Copy HCL snippet"
+                >
+                  {copiedIndex === idx ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400 font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy Fix</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <pre className="font-mono text-[10px] leading-tight text-emerald-300/90 bg-slate-900/90 p-2 rounded border border-slate-800/80 overflow-x-auto">
+                {remediation.snippet}
+              </pre>
+              <div className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                {remediation.guidance}
+              </div>
+            </div>
 
             {/* Downstream Cascade List */}
             {alert.downstream_paths && alert.downstream_paths.length > 0 && (

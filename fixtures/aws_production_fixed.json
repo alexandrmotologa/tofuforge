@@ -1,0 +1,165 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.production",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "production",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {
+            "cidr_block": "10.0.0.0/16",
+            "enable_dns_hostnames": true
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_vpc.production",
+      "mode": "managed",
+      "type": "aws_vpc",
+      "name": "production",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": { "cidr_block": "10.0.0.0/16" },
+        "after": { "cidr_block": "10.0.0.0/16" }
+      }
+    },
+    {
+      "address": "aws_subnet.private_a",
+      "mode": "managed",
+      "type": "aws_subnet",
+      "name": "private_a",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "cidr_block": "10.0.1.0/24" },
+        "after": { "cidr_block": "10.0.1.0/24", "tags": { "Tier": "Internal" } }
+      }
+    },
+    {
+      "address": "aws_security_group.database",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "database",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "name": "production-database-sg" },
+        "after": { "name": "production-database-sg" }
+      }
+    },
+    {
+      "address": "aws_security_group_rule.legacy_ssh",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "legacy_ssh",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "type": "ingress",
+          "from_port": 22,
+          "to_port": 22,
+          "protocol": "tcp",
+          "cidr_blocks": ["10.0.0.0/16"],
+          "description": "Internal VPC bastion access only"
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.user_uploads",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "user_uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "bucket": "acme-ecom-user-uploads-prod",
+          "server_side_encryption_configuration": [{ "rule": [] }]
+        }
+      }
+    },
+    {
+      "address": "aws_db_instance.customer_orders_postgresql",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "customer_orders_postgresql",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": {
+          "identifier": "production-orders-db",
+          "engine": "postgres",
+          "instance_class": "db.m5.large",
+          "allocated_storage": 100,
+          "publicly_accessible": false,
+          "storage_encrypted": true
+        },
+        "after": {
+          "identifier": "production-orders-db",
+          "engine": "postgres",
+          "instance_class": "db.m6g.xlarge",
+          "allocated_storage": 250,
+          "publicly_accessible": false,
+          "storage_encrypted": true
+        }
+      }
+    },
+    {
+      "address": "aws_ecs_service.order_fulfillment_api",
+      "mode": "managed",
+      "type": "aws_ecs_service",
+      "name": "order_fulfillment_api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "desired_count": 4 },
+        "after": { "desired_count": 6 }
+      }
+    },
+    {
+      "address": "aws_route53_record.db_internal",
+      "mode": "managed",
+      "type": "aws_route53_record",
+      "name": "db_internal",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "name": "db.internal.acme.corp" },
+        "after": { "name": "db.internal.acme.corp" }
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_subnet.private_a",
+          "type": "aws_subnet",
+          "name": "private_a",
+          "depends_on": ["aws_vpc.production"]
+        },
+        {
+          "address": "aws_security_group.database",
+          "type": "aws_security_group",
+          "name": "database",
+          "depends_on": ["aws_vpc.production"]
+        },
+        {
+          "address": "aws_db_instance.customer_orders_postgresql",
+          "type": "aws_db_instance",
+          "name": "customer_orders_postgresql",
+          "depends_on": ["aws_subnet.private_a", "aws_security_group.database"]
+        }
+      ]
+    }
+  }
+}

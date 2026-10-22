@@ -6,7 +6,8 @@ import {
   Flame, 
   Radio, 
   AlertOctagon, 
-  ShieldAlert 
+  ShieldAlert,
+  DollarSign
 } from 'lucide-react';
 import type { SummaryStats } from '../types';
 
@@ -21,6 +22,9 @@ export const StatCards: React.FC<StatCardsProps> = ({
   onFilterAction, 
   activeFilter = 'all' 
 }) => {
+  const hasCost = stats.total_monthly_delta !== undefined;
+  const costDelta = stats.total_monthly_delta || 0;
+
   const cards = [
     {
       id: 'create',
@@ -97,10 +101,20 @@ export const StatCards: React.FC<StatCardsProps> = ({
       bgColor: stats.security_issues_count > 0 ? 'bg-red-950/20' : 'bg-slate-900/60',
       borderColor: stats.security_issues_count > 0 ? 'border-red-500/30' : 'border-slate-800',
     },
+    ...(hasCost ? [{
+      id: 'cost',
+      label: 'Cost Delta',
+      count: `${costDelta > 0 ? '+' : costDelta < 0 ? '-' : ''}$${Math.abs(costDelta).toFixed(2)}/mo`,
+      prefix: '',
+      icon: DollarSign,
+      textColor: costDelta > 0 ? 'text-amber-400' : costDelta < 0 ? 'text-emerald-400' : 'text-slate-300',
+      bgColor: costDelta > 0 ? 'bg-amber-950/20' : costDelta < 0 ? 'bg-emerald-950/20' : 'bg-slate-900/60',
+      borderColor: costDelta > 0 ? 'border-amber-500/30' : costDelta < 0 ? 'border-emerald-500/30' : 'border-slate-800',
+    }] : []),
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 p-3 bg-slate-900/80 border-b border-slate-800/80 backdrop-blur-md">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 p-3 bg-slate-900/80 border-b border-slate-800/80 backdrop-blur-md">
       {cards.map(c => {
         const Icon = c.icon;
         const isClickable = onFilterAction && ['create', 'update', 'delete', 'replace'].includes(c.id);
@@ -117,11 +131,11 @@ export const StatCards: React.FC<StatCardsProps> = ({
             <div className={`p-1.5 rounded-md bg-slate-950/50 ${c.textColor}`}>
               <Icon className={`w-4 h-4 ${c.pulse ? 'animate-pulse' : ''}`} />
             </div>
-            <div>
-              <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+            <div className="min-w-0">
+              <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider truncate">
                 {c.label}
               </div>
-              <div className={`text-base font-bold font-mono ${c.textColor}`}>
+              <div className={`text-sm sm:text-base font-bold font-mono truncate ${c.textColor}`}>
                 {c.prefix}{c.count}
               </div>
             </div>

@@ -11,6 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/alexandrmotologa/tofuforge/internal/config"
+	"github.com/alexandrmotologa/tofuforge/internal/diff"
 	"github.com/alexandrmotologa/tofuforge/internal/engine"
 	"github.com/alexandrmotologa/tofuforge/internal/model"
 	"github.com/alexandrmotologa/tofuforge/internal/parser"
@@ -19,7 +21,9 @@ import (
 )
 
 var (
-	version = "1.0.0"
+	version = "1.1.0"
+
+	flagConfig string
 
 	// inspect flags
 	flagJSON           bool
@@ -29,6 +33,10 @@ var (
 	flagFailCritical   bool
 	flagFailSecurity   bool
 	flagMaxBlastRadius int
+	flagMaxCostDelta   float64
+
+	// report flags
+	flagReportOutput string
 
 	// serve flags
 	flagPort int
@@ -42,6 +50,8 @@ func main() {
 		Short:   "TofuForge: Interactive Terraform & OpenTofu Plan Visualizer & Destruction Guard",
 		Version: version,
 	}
+
+	rootCmd.PersistentFlags().StringVarP(&flagConfig, "config", "c", "", "Path to .tofuforge.yaml policy configuration")
 
 	// 1. inspect command
 	inspectCmd := &cobra.Command{
@@ -57,6 +67,7 @@ func main() {
 	inspectCmd.Flags().BoolVar(&flagFailCritical, "fail-on-critical", false, "Exit code 1 if any critical destruction alerts exist")
 	inspectCmd.Flags().BoolVar(&flagFailSecurity, "fail-on-security", false, "Exit code 1 if any critical security violations exist")
 	inspectCmd.Flags().IntVar(&flagMaxBlastRadius, "max-blast-radius", 0, "Exit code 1 if total blast radius score exceeds threshold (0 disables)")
+	inspectCmd.Flags().Float64Var(&flagMaxCostDelta, "max-cost-delta", 0, "Exit code 1 if monthly cost delta exceeds threshold in USD (0 disables)")
 
 	// 2. pr-comment command
 	prCommentCmd := &cobra.Command{
@@ -67,7 +78,27 @@ func main() {
 	}
 	prCommentCmd.Flags().StringVarP(&flagOutput, "output", "o", "", "Write markdown to specified file instead of stdout")
 
-	// 3. serve command
+	// 3. diff command (Plan-to-Plan comparison)
+	diffCmd := &cobra.Command{
+		Use:   "diff <base-plan.json> <target-plan.json>",
+		Short: "Compare two plan revisions to verify resolved destruction risks and delta changes",
+		Args:  cobra.ExactArgs(2),
+		RunE:  runDiff,
+	}
+	diffCmd.Flags().BoolVar(&flagJSON, "json", false, "Output comparison result as JSON")
+	diffCmd.Flags().StringVarP(&flagOutput, "output", "o", "", "Write markdown comparison to specified file")
+	diffCmd.Flags().BoolVar(&flagNoColor, "no-color", false, "Disable colorized terminal output")
+
+	// 4. report command (Standalone Single-File HTML)
+	reportCmd := &cobra.Command{
+		Use:   "report [plan.json]",
+		Short: "Generate a standalone single-file offline HTML visualizer report",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  runReport,
+	}
+	reportCmd.Flags().StringVarP(&flagReportOutput, "output", "o", "tofuforge-report.html", "Path to save standalone HTML report")
+
+	// 5. serve command
 	serveCmd := &cobra.Command{
 		Use:   "serve [plan.json]",
 		Short: "Launch interactive web visualizer studio",
@@ -78,14 +109,14 @@ func main() {
 	serveCmd.Flags().StringVar(&flagHost, "host", "localhost", "Host address to bind")
 	serveCmd.Flags().BoolVar(&flagOpen, "open", false, "Automatically open visualizer in default browser")
 
-	rootCmd.AddCommand(inspectCmd, prCommentCmd, serveCmd)
+	rootCmd.AddCommand(inspectCmd, prCommentCmd, diffCmd, reportCmd, serveCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func loadPlanFromArgOrStdin(args []string) (*model.AnalyzedPlan, error) {
+func loadPlanFromArgOrStdin(args []string, cfg *config.Config) (*model.AnalyzedPlan, error) {
 	var reader io.Reader
 
 	if len(args) == 0 || args[0] == "-" {
@@ -108,26 +139,28 @@ func loadPlanFromArgOrStdin(args []string) (*model.AnalyzedPlan, error) {
 		return nil, fmt.Errorf("failed to parse plan: %w", err)
 	}
 
-	return engine.Analyze(raw), nil
+	return engine.AnalyzeWithConfig(raw, cfg), nil
 }
 
 func runInspect(cmd *cobra.Command, args []string) error {
-	analyzed, err := loadPlanFromArgOrStdin(args)
+	cfg, err := config.LoadConfig(flagConfig)
 	if err != nil {
 		return err
 	}
 
-	// Output JSON if requested
+	analyzed, err := loadPlanFromArgOrStdin(args, cfg)
+	if err != nil {
+		return err
+	}
+
 	if flagJSON {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(analyzed)
 	}
 
-	// Output terminal report
 	reporter.RenderTerminal(os.Stdout, analyzed, flagNoColor)
 
-	// Write markdown output if requested
 	if flagOutput != "" {
 		md := reporter.GenerateMarkdownReport(analyzed)
 		if err := os.WriteFile(flagOutput, []byte(md), 0644); err != nil {
@@ -136,18 +169,30 @@ func runInspect(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Markdown PR summary written to: %s\n", flagOutput)
 	}
 
-	// CI Gating evaluation
-	if flagFailDestruct && (analyzed.Stats.DeleteCount > 0 || analyzed.Stats.ReplaceCount > 0) {
+	// Apply configuration strictness overrides if flags not explicitly set
+	failDestruct := flagFailDestruct || cfg.Strictness.FailOnDestructive
+	failCritical := flagFailCritical || cfg.Strictness.FailOnCritical
+	failSecurity := flagFailSecurity || cfg.Strictness.FailOnSecurity
+	maxBlast := flagMaxBlastRadius
+	if maxBlast == 0 && cfg.Strictness.MaxBlastRadius > 0 {
+		maxBlast = cfg.Strictness.MaxBlastRadius
+	}
+	maxCost := flagMaxCostDelta
+	if maxCost == 0 && cfg.Strictness.MaxCostDelta > 0 {
+		maxCost = cfg.Strictness.MaxCostDelta
+	}
+
+	if failDestruct && (analyzed.Stats.DeleteCount > 0 || analyzed.Stats.ReplaceCount > 0) {
 		fmt.Fprintln(os.Stderr, "\n[CI GATE FAILED] Destructive changes detected (--fail-on-destructive).")
 		os.Exit(1)
 	}
 
-	if flagFailCritical && analyzed.Stats.CriticalAlertsCount > 0 {
+	if failCritical && analyzed.Stats.CriticalAlertsCount > 0 {
 		fmt.Fprintln(os.Stderr, "\n[CI GATE FAILED] Critical destruction alerts detected (--fail-on-critical).")
 		os.Exit(1)
 	}
 
-	if flagFailSecurity {
+	if failSecurity {
 		for _, f := range analyzed.SecurityFindings {
 			if f.Severity == model.SeverityCritical {
 				fmt.Fprintln(os.Stderr, "\n[CI GATE FAILED] Critical security violations detected (--fail-on-security).")
@@ -156,9 +201,15 @@ func runInspect(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if flagMaxBlastRadius > 0 && analyzed.Stats.TotalBlastRadius > flagMaxBlastRadius {
+	if maxBlast > 0 && analyzed.Stats.TotalBlastRadius > maxBlast {
 		fmt.Fprintf(os.Stderr, "\n[CI GATE FAILED] Total blast radius %d exceeds threshold %d (--max-blast-radius).\n",
-			analyzed.Stats.TotalBlastRadius, flagMaxBlastRadius)
+			analyzed.Stats.TotalBlastRadius, maxBlast)
+		os.Exit(1)
+	}
+
+	if maxCost > 0 && analyzed.Stats.TotalMonthlyDelta > maxCost {
+		fmt.Fprintf(os.Stderr, "\n[CI GATE FAILED] Monthly cost increase +$%.2f exceeds limit $%.2f (--max-cost-delta).\n",
+			analyzed.Stats.TotalMonthlyDelta, maxCost)
 		os.Exit(1)
 	}
 
@@ -166,7 +217,12 @@ func runInspect(cmd *cobra.Command, args []string) error {
 }
 
 func runPRComment(cmd *cobra.Command, args []string) error {
-	analyzed, err := loadPlanFromArgOrStdin(args)
+	cfg, err := config.LoadConfig(flagConfig)
+	if err != nil {
+		return err
+	}
+
+	analyzed, err := loadPlanFromArgOrStdin(args, cfg)
 	if err != nil {
 		return err
 	}
@@ -185,10 +241,78 @@ func runPRComment(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func runDiff(cmd *cobra.Command, args []string) error {
+	cfg, err := config.LoadConfig(flagConfig)
+	if err != nil {
+		return err
+	}
+
+	basePlan, err := loadPlanFromFile(args[0], cfg)
+	if err != nil {
+		return fmt.Errorf("failed to load base plan: %w", err)
+	}
+
+	targetPlan, err := loadPlanFromFile(args[1], cfg)
+	if err != nil {
+		return fmt.Errorf("failed to load target plan: %w", err)
+	}
+
+	comp := diff.ComparePlans(basePlan, targetPlan)
+
+	if flagJSON {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(comp)
+	}
+
+	diff.RenderTerminalDiff(os.Stdout, comp, flagNoColor)
+
+	if flagOutput != "" {
+		md := diff.GenerateMarkdownDiff(comp)
+		if err := os.WriteFile(flagOutput, []byte(md), 0644); err != nil {
+			return fmt.Errorf("failed to write diff markdown: %w", err)
+		}
+		fmt.Fprintf(os.Stderr, "Comparison markdown written to: %s\n", flagOutput)
+	}
+
+	return nil
+}
+
+func runReport(cmd *cobra.Command, args []string) error {
+	cfg, err := config.LoadConfig(flagConfig)
+	if err != nil {
+		return err
+	}
+
+	analyzed, err := loadPlanFromArgOrStdin(args, cfg)
+	if err != nil {
+		return err
+	}
+
+	htmlContent, err := reporter.GenerateStandaloneHTML(analyzed)
+	if err != nil {
+		return fmt.Errorf("failed to generate standalone HTML: %w", err)
+	}
+
+	outputPath := flagReportOutput
+	if outputPath == "" {
+		outputPath = "tofuforge-report.html"
+	}
+
+	if err := os.WriteFile(outputPath, []byte(htmlContent), 0644); err != nil {
+		return fmt.Errorf("failed to write HTML report: %w", err)
+	}
+
+	fmt.Printf("Standalone visual HTML report successfully generated at: %s\n", outputPath)
+	return nil
+}
+
 func runServe(cmd *cobra.Command, args []string) error {
+	cfg, _ := config.LoadConfig(flagConfig)
+
 	var initialPlan *model.AnalyzedPlan
 	if len(args) > 0 && args[0] != "" {
-		p, err := loadPlanFromArgOrStdin(args)
+		p, err := loadPlanFromArgOrStdin(args, cfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Could not preload plan '%s': %v\n", args[0], err)
 		} else {
@@ -210,6 +334,21 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	return http.ListenAndServe(addr, srv.Handler())
+}
+
+func loadPlanFromFile(filePath string, cfg *config.Config) (*model.AnalyzedPlan, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	raw, err := parser.ParsePlan(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return engine.AnalyzeWithConfig(raw, cfg), nil
 }
 
 func openBrowser(url string) {

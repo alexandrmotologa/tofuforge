@@ -11,7 +11,10 @@
     "read_count": 0,
     "total_blast_radius": 38,
     "critical_alerts_count": 1,
-    "security_issues_count": 2
+    "security_issues_count": 2,
+    "total_monthly_before": 135.6,
+    "total_monthly_after": 247.75,
+    "total_monthly_delta": 112.15
   },
   "nodes": [
     {
@@ -66,6 +69,13 @@
           "type": "modified"
         }
       ],
+      "cost": {
+        "monthly_before": 135.6,
+        "monthly_after": 247.75,
+        "monthly_delta": 112.15,
+        "currency": "USD",
+        "description": "AWS RDS instance \u0026 storage"
+      },
       "raw_before": {
         "allocated_storage": 100,
         "engine": "postgres",

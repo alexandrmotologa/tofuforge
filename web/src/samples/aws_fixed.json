@@ -1,0 +1,408 @@
+{
+  "terraform_version": "1.9.0",
+  "format_version": "1.2",
+  "stats": {
+    "total_resources": 8,
+    "create_count": 2,
+    "update_count": 5,
+    "delete_count": 0,
+    "replace_count": 0,
+    "no_op_count": 1,
+    "read_count": 0,
+    "total_blast_radius": 0,
+    "critical_alerts_count": 0,
+    "security_issues_count": 0,
+    "total_monthly_before": 135.6,
+    "total_monthly_after": 247.75,
+    "total_monthly_delta": 112.15
+  },
+  "nodes": [
+    {
+      "id": "aws_db_instance.customer_orders_postgresql",
+      "address": "aws_db_instance.customer_orders_postgresql",
+      "name": "customer_orders_postgresql",
+      "type": "aws_db_instance",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "database",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_subnet.private_a",
+        "aws_security_group.database"
+      ],
+      "dependencies": [
+        "aws_subnet.private_a",
+        "aws_security_group.database"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "allocated_storage",
+          "before": 100,
+          "after": 250,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        },
+        {
+          "path": "instance_class",
+          "before": "db.m5.large",
+          "after": "db.m6g.xlarge",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        }
+      ],
+      "cost": {
+        "monthly_before": 135.6,
+        "monthly_after": 247.75,
+        "monthly_delta": 112.15,
+        "currency": "USD",
+        "description": "AWS RDS instance \u0026 storage"
+      },
+      "raw_before": {
+        "allocated_storage": 100,
+        "engine": "postgres",
+        "identifier": "production-orders-db",
+        "instance_class": "db.m5.large",
+        "publicly_accessible": false,
+        "storage_encrypted": true
+      },
+      "raw_after": {
+        "allocated_storage": 250,
+        "engine": "postgres",
+        "identifier": "production-orders-db",
+        "instance_class": "db.m6g.xlarge",
+        "publicly_accessible": false,
+        "storage_encrypted": true
+      }
+    },
+    {
+      "id": "aws_ecs_service.order_fulfillment_api",
+      "address": "aws_ecs_service.order_fulfillment_api",
+      "name": "order_fulfillment_api",
+      "type": "aws_ecs_service",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "compute",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "attribute_diffs": [
+        {
+          "path": "desired_count",
+          "before": 4,
+          "after": 6,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "modified"
+        }
+      ],
+      "raw_before": {
+        "desired_count": 4
+      },
+      "raw_after": {
+        "desired_count": 6
+      }
+    },
+    {
+      "id": "aws_route53_record.db_internal",
+      "address": "aws_route53_record.db_internal",
+      "name": "db_internal",
+      "type": "aws_route53_record",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "dns",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "raw_before": {
+        "name": "db.internal.acme.corp"
+      },
+      "raw_after": {
+        "name": "db.internal.acme.corp"
+      }
+    },
+    {
+      "id": "aws_s3_bucket.user_uploads",
+      "address": "aws_s3_bucket.user_uploads",
+      "name": "user_uploads",
+      "type": "aws_s3_bucket",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "storage",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "attribute_diffs": [
+        {
+          "path": "bucket",
+          "after": "acme-ecom-user-uploads-prod",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "server_side_encryption_configuration",
+          "after": [
+            {
+              "rule": []
+            }
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "bucket": "acme-ecom-user-uploads-prod",
+        "server_side_encryption_configuration": [
+          {
+            "rule": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "aws_security_group.database",
+      "address": "aws_security_group.database",
+      "name": "database",
+      "type": "aws_security_group",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 2,
+      "downstream_ids": [
+        "aws_db_instance.customer_orders_postgresql",
+        "aws_security_group_rule.legacy_ssh"
+      ],
+      "upstream_ids": [
+        "aws_vpc.production"
+      ],
+      "dependencies": [
+        "aws_vpc.production"
+      ],
+      "raw_before": {
+        "name": "production-database-sg"
+      },
+      "raw_after": {
+        "name": "production-database-sg"
+      }
+    },
+    {
+      "id": "aws_security_group_rule.legacy_ssh",
+      "address": "aws_security_group_rule.legacy_ssh",
+      "name": "legacy_ssh",
+      "type": "aws_security_group_rule",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "create",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 0,
+      "upstream_ids": [
+        "aws_security_group.database"
+      ],
+      "dependencies": [
+        "aws_security_group.database"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "cidr_blocks",
+          "after": [
+            "10.0.0.0/16"
+          ],
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "description",
+          "after": "Internal VPC bastion access only",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "from_port",
+          "after": 22,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "protocol",
+          "after": "tcp",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "to_port",
+          "after": 22,
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        },
+        {
+          "path": "type",
+          "after": "ingress",
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_after": {
+        "cidr_blocks": [
+          "10.0.0.0/16"
+        ],
+        "description": "Internal VPC bastion access only",
+        "from_port": 22,
+        "protocol": "tcp",
+        "to_port": 22,
+        "type": "ingress"
+      }
+    },
+    {
+      "id": "aws_subnet.private_a",
+      "address": "aws_subnet.private_a",
+      "name": "private_a",
+      "type": "aws_subnet",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "update",
+      "category": "network",
+      "is_stateful": false,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 1,
+      "downstream_ids": [
+        "aws_db_instance.customer_orders_postgresql"
+      ],
+      "upstream_ids": [
+        "aws_vpc.production"
+      ],
+      "dependencies": [
+        "aws_vpc.production"
+      ],
+      "attribute_diffs": [
+        {
+          "path": "tags",
+          "after": {
+            "Tier": "Internal"
+          },
+          "forces_replacement": false,
+          "sensitive": false,
+          "type": "added"
+        }
+      ],
+      "raw_before": {
+        "cidr_block": "10.0.1.0/24"
+      },
+      "raw_after": {
+        "cidr_block": "10.0.1.0/24",
+        "tags": {
+          "Tier": "Internal"
+        }
+      }
+    },
+    {
+      "id": "aws_vpc.production",
+      "address": "aws_vpc.production",
+      "name": "production",
+      "type": "aws_vpc",
+      "provider": "aws",
+      "module": "root",
+      "mode": "managed",
+      "action": "no-op",
+      "category": "network",
+      "is_stateful": true,
+      "blast_radius_score": 0,
+      "direct_impact": false,
+      "downstream_count": 4,
+      "downstream_ids": [
+        "aws_db_instance.customer_orders_postgresql",
+        "aws_security_group.database",
+        "aws_security_group_rule.legacy_ssh",
+        "aws_subnet.private_a"
+      ],
+      "raw_before": {
+        "cidr_block": "10.0.0.0/16"
+      },
+      "raw_after": {
+        "cidr_block": "10.0.0.0/16"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "aws_vpc.production-\u003eaws_subnet.private_a",
+      "source": "aws_vpc.production",
+      "target": "aws_subnet.private_a",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_vpc.production-\u003eaws_security_group.database",
+      "source": "aws_vpc.production",
+      "target": "aws_security_group.database",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_subnet.private_a-\u003eaws_db_instance.customer_orders_postgresql",
+      "source": "aws_subnet.private_a",
+      "target": "aws_db_instance.customer_orders_postgresql",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_security_group.database-\u003eaws_db_instance.customer_orders_postgresql",
+      "source": "aws_security_group.database",
+      "target": "aws_db_instance.customer_orders_postgresql",
+      "implicit": false,
+      "reason": "explicit depends_on"
+    },
+    {
+      "id": "aws_security_group.database-\u003eaws_security_group_rule.legacy_ssh",
+      "source": "aws_security_group.database",
+      "target": "aws_security_group_rule.legacy_ssh",
+      "implicit": true,
+      "reason": "security group rule parent"
+    }
+  ],
+  "destruction_alerts": [],
+  "security_findings": [],
+  "topological_order": [
+    "aws_ecs_service.order_fulfillment_api",
+    "aws_route53_record.db_internal",
+    "aws_s3_bucket.user_uploads",
+    "aws_vpc.production",
+    "aws_security_group.database",
+    "aws_security_group_rule.legacy_ssh",
+    "aws_subnet.private_a",
+    "aws_db_instance.customer_orders_postgresql"
+  ]
+}

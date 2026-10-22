@@ -1,4 +1,5 @@
 import awsEcommerceData from './aws_ecommerce.json';
+import awsFixedData from './aws_fixed.json';
 import gcpMicroData from './gcp_micro.json';
 import cleanInfraData from './clean_infra.json';
 import type { AnalyzedPlan } from '../types';
@@ -20,6 +21,14 @@ export const SAMPLE_PLANS: SamplePlanOption[] = [
     badge: 'Critical Destruction',
     badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
     plan: awsEcommerceData as unknown as AnalyzedPlan,
+  },
+  {
+    id: 'aws_fixed',
+    title: 'AWS E-Commerce (Remediated)',
+    subtitle: 'Zero replacements, restricted SSH, and verified safe upgrade path',
+    badge: 'Safe Remediated',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    plan: awsFixedData as unknown as AnalyzedPlan,
   },
   {
     id: 'gcp_micro',
