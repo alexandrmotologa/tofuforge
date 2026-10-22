@@ -54,13 +54,25 @@ TofuForge is a single-binary static analysis engine and interactive visual studi
 ## Visual Studio Interface
 
 <div align="center">
-  <img src="docs/images/tofuforge-1.png" alt="TofuForge Dependency DAG and Destruction Alerts" width="900" />
+  <img src="docs/images/tofuforge-1.png" alt="TofuForge Dependency DAG, Cost Guard, and Destruction Alerts" width="900" />
 </div>
 
 <br/>
 
 <div align="center">
-  <img src="docs/images/tofuforge-2.png" alt="Side-by-Side Attribute Diff Inspector" width="900" />
+  <img src="docs/images/tofuforge-2.png" alt="Plan-to-Plan Diff and Safety Comparison Engine" width="900" />
+</div>
+
+<br/>
+
+<div align="center">
+  <img src="docs/images/tofuforge-3.png" alt="Side-by-Side Attribute Diff Inspector and HCL Lifecycle Safeguards" width="900" />
+</div>
+
+<br/>
+
+<div align="center">
+  <img src="docs/images/tofuforge-4.png" alt="Responsive Mobile Layout on Small Devices" width="480" />
 </div>
 
 ---

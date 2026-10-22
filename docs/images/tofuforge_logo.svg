@@ -1,60 +1,113 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
   <defs>
-    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#1e1b4b" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="1"/>
-    </radialGradient>
-    <linearGradient id="forgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Background subtle gradient -->
+    <linearGradient id="sqGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+
+    <!-- Molten Amber / Gold Forge Gradient -->
+    <linearGradient id="amberForge" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#f59e0b"/>
-      <stop offset="50%" stop-color="#f43f5e"/>
-      <stop offset="100%" stop-color="#8b5cf6"/>
+      <stop offset="50%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#dc2626"/>
     </linearGradient>
-    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#ef4444"/>
-      <stop offset="50%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#fef08a"/>
+
+    <!-- Obsidian Slate Shading Gradients -->
+    <linearGradient id="slateLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#334155"/>
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
+
+    <linearGradient id="slateDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
   </defs>
 
-  <!-- Background Base -->
-  <rect width="400" height="400" rx="80" fill="url(#bgGlow)"/>
-  <rect width="396" height="396" x="2" y="2" rx="78" fill="none" stroke="#334155" stroke-width="2" stroke-opacity="0.4"/>
+  <!-- 1. Luxury White Squircle Container -->
+  <rect x="16" y="16" width="992" height="992" rx="220" fill="url(#sqGrad)" stroke="#e2e8f0" stroke-width="8"/>
+  <rect x="32" y="32" width="960" height="960" rx="204" fill="none" stroke="#f1f5f9" stroke-width="4"/>
 
-  <!-- Subtle Blueprint Grid -->
-  <path d="M 60,0 L 60,400 M 120,0 L 120,400 M 180,0 L 180,400 M 240,0 L 240,400 M 300,0 L 300,400 M 360,0 L 360,400
-           M 0,60 L 400,60 M 0,120 L 400,120 M 0,180 L 400,180 M 0,240 L 400,240 M 0,300 L 400,300 M 0,360 L 400,360"
-        stroke="#1e293b" stroke-width="1" stroke-opacity="0.3"/>
-
-  <!-- DAG Graph Connecting Lines -->
-  <g stroke="#64748b" stroke-width="3" stroke-dasharray="4,4" opacity="0.6">
-    <line x1="120" y1="130" x2="200" y2="190"/>
-    <line x1="280" y1="130" x2="200" y2="190"/>
-    <line x1="200" y1="190" x2="140" y2="280"/>
-    <line x1="200" y1="190" x2="260" y2="280"/>
+  <!-- 2. Technical Blueprint Accent Lines (Subtle Infrastructure Grid) -->
+  <g stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6,8" opacity="0.6">
+    <line x1="512" y1="120" x2="512" y2="904"/>
+    <line x1="120" y1="512" x2="904" y2="512"/>
+    <circle cx="512" cy="512" r="380" fill="none"/>
   </g>
 
-  <!-- Graph Nodes -->
-  <circle cx="120" cy="130" r="14" fill="#0f172a" stroke="#10b981" stroke-width="4"/>
-  <circle cx="280" cy="130" r="14" fill="#0f172a" stroke="#0ea5e9" stroke-width="4"/>
-  <circle cx="140" cy="280" r="14" fill="#0f172a" stroke="#8b5cf6" stroke-width="4"/>
-  <circle cx="260" cy="280" r="14" fill="#0f172a" stroke="#f43f5e" stroke-width="4"/>
+  <!-- 3. Outer Gateway Hexagonal Frame -->
+  <polygon points="512,140 840,326 840,698 512,884 184,698 184,326"
+           fill="none" stroke="#0f172a" stroke-width="32" stroke-linejoin="round"/>
+  <polygon points="512,165 815,337 815,687 512,859 209,687 209,337"
+           fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="12,12" stroke-linejoin="round" opacity="0.75"/>
 
-  <!-- Anvil Base / Forge Body -->
-  <path d="M 120 230 L 280 230 L 260 255 L 240 255 L 250 290 L 150 290 L 160 255 L 140 255 Z"
-        fill="#0f172a" stroke="url(#forgeGradient)" stroke-width="6" stroke-linejoin="round"/>
+  <!-- 4. Watertight Solid Mascot Base Silhouette (Zero-Leak) -->
+  <path d="M 512 250
+           L 620 280 L 690 380 L 680 500 L 730 620 L 690 730 L 610 780 L 512 800
+           L 414 780 L 334 730 L 294 620 L 344 500 L 334 380 L 404 280 Z"
+        fill="#0f172a"/>
 
-  <!-- Central Dynamic Flame / Anvil Horn -->
-  <path d="M 200 130 C 180 160 170 185 180 210 C 190 225 210 225 220 210 C 230 185 220 160 200 130 Z"
-        fill="url(#flameGrad)" filter="url(#glow)"/>
-  <path d="M 200 155 C 190 175 185 190 190 205 C 195 215 205 215 210 205 C 215 190 210 175 200 155 Z"
-        fill="#fef08a"/>
+  <!-- 5. Low-Poly Sentinel Hound Facets (Symmetric Geometric Mesh) -->
+  <!-- Forehead Central Ridge -->
+  <polygon points="512,270 470,360 512,410 554,360" fill="#334155"/>
+  <polygon points="512,410 460,490 512,540 564,490" fill="#1e293b"/>
 
-  <!-- Spark Accents -->
-  <circle cx="170" cy="140" r="3" fill="#f59e0b" filter="url(#glow)"/>
-  <circle cx="235" cy="150" r="2.5" fill="#f43f5e" filter="url(#glow)"/>
-  <circle cx="195" cy="110" r="3" fill="#fde047" filter="url(#glow)"/>
+  <!-- Left Brow & Temple -->
+  <polygon points="470,360 380,310 404,280 512,270" fill="#475569"/>
+  <polygon points="470,360 370,410 460,490" fill="#1e293b"/>
+  <polygon points="380,310 334,380 370,410" fill="#0f172a"/>
+
+  <!-- Right Brow & Temple -->
+  <polygon points="554,360 512,270 620,280 644,310" fill="#64748b"/>
+  <polygon points="554,360 460,490 564,490" fill="#334155"/>
+  <polygon points="554,360 564,490 654,410" fill="#334155"/>
+  <polygon points="644,310 654,410 690,380" fill="#1e293b"/>
+
+  <!-- Alert Erect Ears -->
+  <!-- Left Ear -->
+  <polygon points="404,280 340,160 440,250" fill="#1e293b"/>
+  <polygon points="440,250 340,160 470,270" fill="#334155"/>
+  <polygon points="340,160 320,260 404,280" fill="#0f172a"/>
+
+  <!-- Right Ear -->
+  <polygon points="620,280 584,250 684,160" fill="#334155"/>
+  <polygon points="584,250 554,270 684,160" fill="#475569"/>
+  <polygon points="620,280 684,160 704,260" fill="#1e293b"/>
+
+  <!-- Piercing Amber Predator Eyes (Geometric cant) -->
+  <!-- Left Eye -->
+  <polygon points="430,425 470,445 425,455 395,435" fill="#f59e0b"/>
+  <polygon points="432,430 460,442 430,448 405,436" fill="#fef08a"/>
+  <!-- Right Eye -->
+  <polygon points="594,425 629,435 599,455 554,445" fill="#f59e0b"/>
+  <polygon points="592,430 619,436 594,448 564,442" fill="#fef08a"/>
+
+  <!-- Snout & Bridge -->
+  <polygon points="512,540 470,590 512,640 554,590" fill="#334155"/>
+  <polygon points="460,490 440,570 470,590 512,540" fill="#0f172a"/>
+  <polygon points="564,490 512,540 554,590 584,570" fill="#1e293b"/>
+
+  <!-- Cheeks & Jaw Flares -->
+  <!-- Left Jaw -->
+  <polygon points="370,410 344,500 440,570" fill="#0f172a"/>
+  <polygon points="344,500 294,620 380,660 440,570" fill="#1e293b"/>
+  <!-- Right Jaw -->
+  <polygon points="654,410 584,570 680,500" fill="#334155"/>
+  <polygon points="680,500 584,570 644,660 730,620" fill="#0f172a"/>
+
+  <!-- Muzzle & Obsidian Nose Plate -->
+  <polygon points="470,590 480,640 512,655 544,640 554,590 512,605" fill="#0f172a"/>
+  <polygon points="485,625 512,650 539,625" fill="#f59e0b"/>
+
+  <!-- Lower Chin & Neck Guard -->
+  <polygon points="512,655 450,710 512,745 574,710" fill="#1e293b"/>
+  <polygon points="380,660 450,710 430,770 334,730" fill="#0f172a"/>
+  <polygon points="644,660 574,710 594,770 690,730" fill="#334155"/>
+  <polygon points="450,710 512,745 512,795 430,770" fill="#0f172a"/>
+  <polygon points="574,710 512,745 512,795 594,770" fill="#1e293b"/>
+
+  <!-- 6. Golden Forge Heart Emblem (Protection Core on Chest) -->
+  <polygon points="512,710 540,745 512,780 484,745" fill="url(#amberForge)"/>
+  <circle cx="512" cy="745" r="7" fill="#fef08a"/>
 </svg>

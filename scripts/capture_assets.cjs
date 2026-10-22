@@ -35,12 +35,41 @@ async function capture() {
     await page.screenshot({ path: filename });
   };
 
-  // 1. Initial Overview Screenshot
-  console.log('Capturing Screenshot 1: Overview...');
+  // 1. Initial Overview Screenshot (with Cost Delta, Layout switchers, and HCL safeguard in alert sidebar)
+  console.log('Capturing Screenshot 1: Overview with Cost Delta & Layout Switcher...');
   await page.screenshot({ path: path.join(imagesDir, 'tofuforge-1.png') });
   for (let i = 0; i < 6; i++) await snapFrame();
 
-  // 2. Click on the RDS database node to highlight cascade and open diff modal
+  // 2. Open Plan-to-Plan Diff Modal (Compare Diff)
+  console.log('Opening Plan-to-Plan Diff Modal...');
+  await page.evaluate(() => {
+    const buttons = document.querySelectorAll('button');
+    for (const b of buttons) {
+      if (b.textContent && b.textContent.includes('Compare Diff')) {
+        b.click();
+        return;
+      }
+    }
+  });
+  await new Promise(r => setTimeout(r, 1000));
+
+  console.log('Capturing Screenshot 2: Plan Revision Comparison Modal...');
+  await page.screenshot({ path: path.join(imagesDir, 'tofuforge-2.png') });
+  for (let i = 0; i < 7; i++) await snapFrame();
+
+  // Close Plan Diff Modal
+  await page.evaluate(() => {
+    const buttons = document.querySelectorAll('button');
+    for (const b of buttons) {
+      if (b.textContent && b.textContent.trim() === 'Close') {
+        b.click();
+        return;
+      }
+    }
+  });
+  await new Promise(r => setTimeout(r, 600));
+
+  // 3. Click on the RDS database node to highlight cascade and open diff modal
   console.log('Clicking on database node to highlight cascade and open attribute diff...');
   const dbNode = await page.evaluateHandle(() => {
     const nodes = document.querySelectorAll('.react-flow__node');
@@ -57,53 +86,49 @@ async function capture() {
     await new Promise(r => setTimeout(r, 800));
   }
 
-  console.log('Capturing Screenshot 2: Attribute Diff Modal & Downstream Cascade...');
-  await page.screenshot({ path: path.join(imagesDir, 'tofuforge-2.png') });
-  for (let i = 0; i < 7; i++) await snapFrame();
-
-  // 3. Close modal
-  console.log('Closing diff modal and switching to Security tab...');
-  const closeBtn = await page.$('button[title="Close"], button svg.lucide-x');
-  if (closeBtn) {
-    await closeBtn.click();
-    await new Promise(r => setTimeout(r, 400));
-  } else {
-    await page.keyboard.press('Escape');
-    await new Promise(r => setTimeout(r, 400));
-  }
-
-  // Click Security Tab
+  // Click on HCL Safeguard tab in modal
   await page.evaluate(() => {
-    const buttons = document.querySelectorAll('button');
-    for (const b of buttons) {
-      if (b.textContent && b.textContent.includes('Security')) {
-        b.click();
+    const tabs = document.querySelectorAll('button');
+    for (const t of tabs) {
+      if (t.textContent && t.textContent.includes('HCL Safeguard')) {
+        t.click();
         return;
       }
     }
   });
-  await new Promise(r => setTimeout(r, 800));
+  await new Promise(r => setTimeout(r, 600));
 
-  console.log('Capturing Screenshot 3: Security Audit Tab...');
+  console.log('Capturing Screenshot 3: Node Diff Modal with HCL Safeguard Tab...');
   await page.screenshot({ path: path.join(imagesDir, 'tofuforge-3.png') });
   for (let i = 0; i < 7; i++) await snapFrame();
 
-  // 4. Open PR Comment Modal
-  console.log('Opening PR Comment Modal...');
+  // Close node modal
+  await page.keyboard.press('Escape');
+  await new Promise(r => setTimeout(r, 600));
+
+  // Switch layout to Horizontal (LR)
+  console.log('Switching layout to Horizontal LR...');
   await page.evaluate(() => {
     const buttons = document.querySelectorAll('button');
     for (const b of buttons) {
-      if (b.textContent && b.textContent.includes('PR Comment')) {
+      if (b.textContent && b.textContent.includes('(LR)')) {
         b.click();
         return;
       }
     }
   });
-  await new Promise(r => setTimeout(r, 800));
+  await new Promise(r => setTimeout(r, 1000));
+  for (let i = 0; i < 5; i++) await snapFrame();
 
-  console.log('Capturing Screenshot 4: PR Comment Markdown Modal...');
-  await page.screenshot({ path: path.join(imagesDir, 'tofuforge-4.png') });
-  for (let i = 0; i < 7; i++) await snapFrame();
+  // 4. Capture Responsive Mobile / Tablet view
+  console.log('Capturing Screenshot 4: Responsive Mobile Layout...');
+  const mobilePage = await browser.newPage();
+  await mobilePage.setViewport({ width: 480, height: 860, deviceScaleFactor: 2 });
+  await mobilePage.goto('http://localhost:8085', { waitUntil: 'networkidle0' });
+  await mobilePage.waitForSelector('.react-flow__node', { timeout: 10000 });
+  await new Promise(r => setTimeout(r, 1000));
+  await mobilePage.screenshot({ path: path.join(imagesDir, 'tofuforge-4.png') });
+  await mobilePage.close();
 
   await browser.close();
 

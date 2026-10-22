@@ -301,7 +301,7 @@ export const PlanGraphView: React.FC<PlanGraphViewProps> = ({
       <div className="absolute top-4 right-4 z-10 flex items-center gap-1 p-1 rounded-lg bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-md text-xs">
         <button
           onClick={() => setLayoutMode('TB')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded font-medium transition ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded font-medium transition ${
             layoutMode === 'TB'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-400 hover:text-slate-200'
@@ -309,12 +309,13 @@ export const PlanGraphView: React.FC<PlanGraphViewProps> = ({
           title="Vertical Top-to-Bottom DAG"
         >
           <ArrowDown className="w-3.5 h-3.5" />
-          <span>Vertical (TB)</span>
+          <span className="hidden sm:inline">Vertical</span>
+          <span>(TB)</span>
         </button>
 
         <button
           onClick={() => setLayoutMode('LR')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded font-medium transition ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded font-medium transition ${
             layoutMode === 'LR'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-400 hover:text-slate-200'
@@ -322,12 +323,13 @@ export const PlanGraphView: React.FC<PlanGraphViewProps> = ({
           title="Horizontal Left-to-Right DAG"
         >
           <ArrowRight className="w-3.5 h-3.5" />
-          <span>Horizontal (LR)</span>
+          <span className="hidden sm:inline">Horizontal</span>
+          <span>(LR)</span>
         </button>
 
         <button
           onClick={() => setLayoutMode('clusters')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded font-medium transition ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded font-medium transition ${
             layoutMode === 'clusters'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-400 hover:text-slate-200'

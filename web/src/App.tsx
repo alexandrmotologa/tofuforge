@@ -157,41 +157,41 @@ export const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 select-none">
       {/* Top Navigation Bar */}
-      <header className="h-14 px-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-4 shrink-0 z-20">
+      <header className="h-14 px-3 sm:px-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-20">
         {/* Brand */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 via-rose-600 to-indigo-600 shadow-md shadow-rose-950/40 text-white font-bold">
             <Flame className="w-5 h-5 text-amber-200" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-tight text-base text-white">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="font-extrabold tracking-tight text-sm sm:text-base text-white">
                 Tofu<span className="text-amber-400">Forge</span>
               </span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                 v1.1
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 hidden sm:block">
+            <div className="text-[10px] text-slate-400 hidden md:block">
               Terraform & OpenTofu Plan Visualizer & Blast-Radius Guard
             </div>
           </div>
         </div>
 
         {/* Status & Plan Details */}
-        <div className="flex items-center gap-2.5">
-          <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${status.className}`}>
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+          <div className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${status.className}`}>
             {status.icon}
             <span>{status.text}</span>
           </div>
 
           {/* Sample Plans Selector */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 ml-1.5" />
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs max-w-[140px] sm:max-w-xs truncate">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 ml-1 shrink-0" />
             <select
               value={activeSampleId}
               onChange={e => handleSelectSample(e.target.value)}
-              className="bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer pr-2"
+              className="bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer pr-1 w-full truncate"
             >
               {activeSampleId === '' && <option value="" className="bg-slate-900">Custom / Ingested Plan</option>}
               {SAMPLE_PLANS.map(s => (
@@ -204,11 +204,11 @@ export const App: React.FC = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Plan-to-Plan Diff Button */}
           <button
             onClick={() => setIsDiffModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
             title="Compare two plan revisions"
           >
             <GitCompare className="w-4 h-4 text-purple-400" />
@@ -218,25 +218,27 @@ export const App: React.FC = () => {
           {/* Ingest Plan Button */}
           <button
             onClick={() => setIsDropzoneOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            title="Ingest Terraform or OpenTofu plan JSON"
           >
             <UploadCloud className="w-4 h-4 text-blue-400" />
-            <span className="hidden sm:inline">Ingest Plan</span>
+            <span className="hidden md:inline">Ingest Plan</span>
           </button>
 
           {/* PR Comment Markdown */}
           <button
             onClick={() => setIsMarkdownModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition"
+            title="Generate PR Comment Markdown"
           >
             <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">PR Comment</span>
+            <span className="hidden md:inline">PR Comment</span>
           </button>
 
           {/* Export Offline HTML Report */}
           <button
             onClick={handleExportHTML}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
             title="Download standalone offline HTML report"
           >
             <Download className="w-4 h-4 text-amber-400" />
@@ -247,7 +249,7 @@ export const App: React.FC = () => {
             href="https://github.com/alexandrmotologa/tofuforge"
             target="_blank"
             rel="noreferrer"
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition"
+            className="p-1.5 sm:p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition"
             title="GitHub Repository"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -269,9 +271,9 @@ export const App: React.FC = () => {
         {/* Left / Center Graph Visualizer Canvas */}
         <div className="flex-1 flex flex-col relative h-full">
           {/* Canvas Sub-toolbar */}
-          <div className="h-11 px-4 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between gap-3 shrink-0 z-10 backdrop-blur-sm">
+          <div className="min-h-11 py-1.5 px-3 sm:px-4 bg-slate-900/90 border-b border-slate-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 shrink-0 z-10 backdrop-blur-sm">
             {/* Search Input */}
-            <div className="flex items-center gap-2 max-w-sm w-full bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-xs">
+            <div className="flex items-center gap-2 flex-1 sm:max-w-sm w-full bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-xs">
               <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <input
                 type="text"
@@ -288,7 +290,7 @@ export const App: React.FC = () => {
             </div>
 
             {/* Quick Action Filter Pills */}
-            <div className="flex items-center gap-1 text-[11px]">
+            <div className="flex items-center gap-1 text-[11px] overflow-x-auto max-w-full py-0.5">
               <span className="text-slate-400 mr-1 hidden md:inline text-[10px] uppercase font-semibold">Action:</span>
               {[
                 { id: 'all', label: 'All' },
@@ -300,7 +302,7 @@ export const App: React.FC = () => {
                 <button
                   key={f.id}
                   onClick={() => setActionFilter(f.id)}
-                  className={`px-2.5 py-0.5 rounded-full capitalize transition font-medium ${
+                  className={`px-2.5 py-0.5 rounded-full capitalize transition font-medium shrink-0 ${
                     actionFilter === f.id
                       ? 'bg-slate-700 text-white shadow-sm'
                       : `bg-slate-800/80 text-slate-400 hover:text-slate-200 ${f.color || ''}`
@@ -315,7 +317,7 @@ export const App: React.FC = () => {
             {selectedNode && (
               <button
                 onClick={() => setSelectedNode(null)}
-                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800 border border-slate-700 transition"
+                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800 border border-slate-700 transition shrink-0"
               >
                 <span>Clear Selection</span>
                 <X className="w-3 h-3" />
@@ -338,12 +340,12 @@ export const App: React.FC = () => {
 
         {/* Right Collapsible Panel */}
         <aside
-          className={`border-l border-slate-800 bg-slate-900/95 flex flex-col shrink-0 transition-all duration-200 z-10 ${
-            isSidebarOpen ? 'w-96' : 'w-10'
+          className={`border-l border-slate-800 bg-slate-900/95 flex flex-col shrink-0 transition-all duration-200 z-20 ${
+            isSidebarOpen ? 'w-full sm:w-96 fixed sm:relative inset-y-0 right-0 shadow-2xl' : 'w-10'
           }`}
         >
           {/* Sidebar Toggle & Tabs Header */}
-          <div className="h-11 border-b border-slate-800 flex items-center justify-between px-2 bg-slate-900">
+          <div className="h-11 border-b border-slate-800 flex items-center justify-between px-2 bg-slate-900 shrink-0">
             {isSidebarOpen ? (
               <div className="flex items-center gap-1 flex-1">
                 <button
